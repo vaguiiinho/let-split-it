@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Group {
+  id        String    @id
+  name      String
+  createdAt DateTime
+  members   Member[]
+  expenses  Expense[]
+}
+
+model Member {
+  id       String  @id
+  groupId  String
+  name     String
+  pixKey   String?
+  position Int
+  group    Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paid     Expense[]
+  shares   ExpenseParticipant[]
+
+  @@index([groupId])
+}
+
+model Expense {
+  id           String               @id
+  groupId      String
+  description  String
+  amountCents  Int
+  payerId      String
+  createdAt    DateTime
+  position     Int
+  group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer        Member               @relation(fields: [payerId], references: [id])
+  participants ExpenseParticipant[]
+
+  @@index([groupId])
+}
+
+model ExpenseParticipant {
+  expenseId String
+  memberId  String
+  weight    Int
+  position  Int
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id])
+
+  @@id([expenseId, memberId])
+}

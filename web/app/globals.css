@@ -1,0 +1,135 @@
+@import 'tailwindcss';
+
+/* ===== Racha Aí — tokens (ver DESIGN.md) ===== */
+:root {
+  --bg: #fff7e8;
+  --surface: #ffffff;
+  --surface-2: #fff0d6;
+  --ink: #1e1a2b;
+  --muted: #554e69;
+  --line: #1e1a2b;
+  --shadow: #1e1a2b;
+  --brand: #0a7457;
+  --brand-ink: #ffffff;
+  --accent: #ffb020;
+  --accent-ink: #1e1a2b;
+  --pos: #0a7457;
+  --pos-soft: #dff5ea;
+  --neg: #b4233a;
+  --neg-soft: #fde4e7;
+  --focus: #6d28d9;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15121d;
+    --surface: #211b2d;
+    --surface-2: #2b2339;
+    --ink: #f6f1ff;
+    --muted: #bdb3d1;
+    --line: #5a4f73;
+    --shadow: #000000;
+    --brand: #3ddc97;
+    --brand-ink: #0b1c14;
+    --accent: #ffc24d;
+    --accent-ink: #1e1a2b;
+    --pos: #4ade9b;
+    --pos-soft: #12301f;
+    --neg: #ff8597;
+    --neg-soft: #3a1820;
+    --focus: #c9adff;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-focus: var(--focus);
+  --font-sans: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --shadow-sticker: 4px 4px 0 0 var(--shadow);
+  --shadow-sticker-sm: 2px 2px 0 0 var(--shadow);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border-2 border-line bg-surface p-4 shadow-sticker sm:p-6;
+  }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-line px-4 py-2 font-bold
+      shadow-sticker-sm transition-[transform,box-shadow] duration-100 select-none
+      active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand text-brand-ink;
+  }
+  .btn-accent {
+    @apply bg-accent text-accent-ink;
+  }
+  .btn-ghost {
+    @apply bg-surface text-ink;
+  }
+  .btn-danger {
+    @apply bg-surface text-neg;
+  }
+  .btn-icon {
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-lg text-muted hover:bg-neg-soft hover:text-neg
+      disabled:opacity-50;
+  }
+  .field-label {
+    @apply mb-1 block text-sm font-bold;
+  }
+  .input {
+    @apply min-h-11 w-full rounded-xl border-2 border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted
+      focus-visible:outline-offset-0;
+  }
+  .hint {
+    @apply mt-1 text-xs text-muted;
+  }
+  .alert-error {
+    @apply mt-3 rounded-xl border-2 border-neg bg-neg-soft px-3 py-2 text-sm font-semibold text-neg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

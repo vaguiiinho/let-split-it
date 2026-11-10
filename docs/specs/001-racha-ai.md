@@ -36,7 +36,8 @@ api/src/
 
 ### Regras de domínio (invariantes)
 - Nome do rolê: 1–60 chars (trim). Nome de pessoa: 1–40 chars, único no rolê (case-insensitive).
-- Chave PIX opcional, até 77 chars.
+- Chave PIX opcional, até 77 chars, apenas ASCII imprimível sem espaços (o TLV do BR Code é medido em bytes).
+- Nome de pessoa duplicado → 409; pagador/participante fora do rolê → 400.
 - Despesa: descrição 1–80 chars; `amountCents` inteiro > 0 e ≤ 100.000.000; `payerId` deve ser membro;
   `participants` ≥ 1, membros únicos e do rolê; `weight` inteiro 1–100 (default 1).
 - Não é possível remover pessoa que participa de alguma despesa (como pagador ou participante) → 409.
