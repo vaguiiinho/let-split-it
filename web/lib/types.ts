@@ -21,6 +21,14 @@ export interface Expense {
   participants: ExpenseParticipant[];
 }
 
+export interface Payment {
+  id: string;
+  fromId: string;
+  toId: string;
+  amountCents: number;
+  createdAt: string;
+}
+
 export interface GroupDetail {
   id: string;
   name: string;
@@ -28,6 +36,8 @@ export interface GroupDetail {
   totalCents: number;
   members: Member[];
   expenses: Expense[];
+  /** Pagamentos registrados (mais recente primeiro). */
+  payments: Payment[];
 }
 
 export interface GroupSummary {
@@ -44,6 +54,10 @@ export interface Balance {
   name: string;
   paidCents: number;
   owedCents: number;
+  /** Total já pago a outras pessoas via pagamentos registrados. */
+  sentCents: number;
+  /** Total já recebido de outras pessoas via pagamentos registrados. */
+  receivedCents: number;
   balanceCents: number;
 }
 
@@ -67,6 +81,12 @@ export interface CreateExpenseInput {
   amountCents: number;
   payerId: string;
   participants: { memberId: string; weight?: number }[];
+}
+
+export interface RegisterPaymentInput {
+  fromId: string;
+  toId: string;
+  amountCents: number;
 }
 
 export interface ApiErrorBody {

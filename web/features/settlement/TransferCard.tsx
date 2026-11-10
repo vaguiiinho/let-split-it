@@ -2,11 +2,21 @@
 
 import QRCode from 'qrcode';
 import { useState } from 'react';
+import type { FormAction } from '@/features/ui/useFormAction';
 import { useCopy } from '@/features/ui/useCopy';
+import { RegisterPaymentForm } from './RegisterPaymentForm';
 import { formatBRL } from '@/lib/money';
 import type { Transfer } from '@/lib/types';
 
-export function TransferCard({ transfer }: { transfer: Transfer }) {
+export function TransferCard({
+  transfer,
+  groupId,
+  registerAction,
+}: {
+  transfer: Transfer;
+  groupId: string;
+  registerAction: FormAction;
+}) {
   const { status, copy } = useCopy();
   const [qr, setQr] = useState<string | null>(null);
   const [qrError, setQrError] = useState(false);
@@ -72,6 +82,8 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
       ) : (
         <p className="mt-2 text-sm text-muted">{transfer.toName} não cadastrou chave PIX — combina direto com ela(e). 🙂</p>
       )}
+
+      <RegisterPaymentForm action={registerAction} groupId={groupId} transfer={transfer} />
     </article>
   );
 }

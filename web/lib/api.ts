@@ -5,6 +5,7 @@ import type {
   CreateExpenseInput,
   GroupDetail,
   GroupSummary,
+  RegisterPaymentInput,
   Settlement,
 } from './types';
 
@@ -102,6 +103,15 @@ export const api = {
     }),
   removeExpense: (groupId: string, expenseId: string) =>
     request<GroupDetail>(`/groups/${enc(groupId)}/expenses/${enc(expenseId)}`, {
+      method: 'DELETE',
+    }),
+  registerPayment: (groupId: string, input: RegisterPaymentInput) =>
+    request<GroupDetail>(`/groups/${enc(groupId)}/payments`, {
+      method: 'POST',
+      body: json(input),
+    }),
+  removePayment: (groupId: string, paymentId: string) =>
+    request<GroupDetail>(`/groups/${enc(groupId)}/payments/${enc(paymentId)}`, {
       method: 'DELETE',
     }),
   getSettlement: (groupId: string) =>

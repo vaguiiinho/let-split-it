@@ -100,6 +100,39 @@ export async function addExpenseAction(_prev: Prev, fd: FormData): Promise<Actio
   return run(groupId, () => api.addExpense(groupId, input));
 }
 
+export async function removePaymentAction(_prev: Prev, fd: FormData): Promise<ActionResult> {
+  const parsed = pairSchema.safeParse({ groupId: str(fd, 'groupId'), targetId: str(fd, 'paymentId') });
+  if (!parsed.success) return firstIssue(parsed.error);
+  const { groupId, targetId } = parsed.data;
+  return run(groupId, () => api.removePayment(groupId, targetId));
+}
+
+const paymentSchema = z
+  .object({
+    groupId: idSchema,
+    fromId: idSchema,
+    toId: idSchema,
+    amountCents: z
+      .number({ error: 'Valor inválido. Use algo como 12,34.' })
+      .int()
+      .positive('O valor precisa ser maior que zero.')
+      .max(MAX_AMOUNT_CENTS, 'Valor máximo: R$ 1.000.000,00.'),
+  })
+  .refine((p) => p.fromId !== p.toId, 'Quem paga e quem recebe precisam ser pessoas diferentes.');
+
+export async function registerPaymentAction(_prev: Prev, fd: FormData): Promise<ActionResult> {
+  const amountCents = parseMoneyToCents(str(fd, 'amount'));
+  const parsed = paymentSchema.safeParse({
+    groupId: str(fd, 'groupId'),
+    fromId: str(fd, 'fromId'),
+    toId: str(fd, 'toId'),
+    amountCents: amountCents ?? Number.NaN,
+  });
+  if (!parsed.success) return firstIssue(parsed.error);
+  const { groupId, ...input } = parsed.data;
+  return run(groupId, () => api.registerPayment(groupId, input));
+}
+
 export async function deleteGroupAction(_prev: Prev, fd: FormData): Promise<ActionResult> {
   const parsed = idSchema.safeParse(str(fd, 'groupId'));
   if (!parsed.success) return firstIssue(parsed.error);

@@ -17,11 +17,15 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
-    files: ['src/domain/**/*.ts'],
+    files: [
+      'src/shared/domain/**/*.ts',
+      'src/modules/*/domain/**/*.ts',
+      'src/modules/*/application/**/*.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: ['@nestjs/*', '@prisma/*', '../application/*', '../infrastructure/*', '../presentation/*'] },
+        { patterns: ['@nestjs/*', '@prisma/*', '**/infrastructure/*', '**/presentation/*'] },
       ],
     },
   },

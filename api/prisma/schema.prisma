@@ -13,17 +13,20 @@ model Group {
   createdAt DateTime
   members   Member[]
   expenses  Expense[]
+  payments  Payment[]
 }
 
 model Member {
-  id       String  @id
-  groupId  String
-  name     String
-  pixKey   String?
-  position Int
-  group    Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  paid     Expense[]
-  shares   ExpenseParticipant[]
+  id               String               @id
+  groupId          String
+  name             String
+  pixKey           String?
+  position         Int
+  group            Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paid             Expense[]
+  shares           ExpenseParticipant[]
+  paymentsSent     Payment[]            @relation("PaymentFrom")
+  paymentsReceived Payment[]            @relation("PaymentTo")
 
   @@index([groupId])
 }
@@ -37,7 +40,7 @@ model Expense {
   createdAt    DateTime
   position     Int
   group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  payer        Member               @relation(fields: [payerId], references: [id])
+  payer        Member               @relation(fields: [payerId], references: [id], onDelete: Cascade)
   participants ExpenseParticipant[]
 
   @@index([groupId])
@@ -49,7 +52,22 @@ model ExpenseParticipant {
   weight    Int
   position  Int
   expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  member    Member  @relation(fields: [memberId], references: [id])
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@id([expenseId, memberId])
+}
+
+model Payment {
+  id          String   @id
+  groupId     String
+  fromId      String
+  toId        String
+  amountCents Int
+  createdAt   DateTime
+  position    Int
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  from        Member   @relation("PaymentFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to          Member   @relation("PaymentTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
 }

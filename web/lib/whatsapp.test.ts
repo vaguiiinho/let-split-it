@@ -38,4 +38,17 @@ describe('buildWhatsAppSummary', () => {
     expect(text).toContain('Tudo quitado');
     expect(text).not.toContain('paga');
   });
+
+  it('após pagamento parcial, mostra só o restante e mantém o total das despesas', () => {
+    const rest: Settlement = {
+      totalCents: 12000,
+      balances: [],
+      transfers: [{ fromId: 'c', fromName: 'Carla', toId: 'a', toName: 'Ana', amountCents: 2500, pixPayload: null }],
+    };
+    const text = norm(buildWhatsAppSummary('X', rest));
+    expect(text).toContain('Total do rolê: *R$ 120,00*');
+    expect(text).toContain('1 transferência)');
+    expect(text).toContain('Carla paga *R$ 25,00* pra Ana');
+    expect(text).not.toContain('R$ 40,00');
+  });
 });

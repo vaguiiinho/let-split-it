@@ -13,8 +13,10 @@ import {
   addExpenseAction,
   addMemberAction,
   deleteGroupAction,
+  registerPaymentAction,
   removeExpenseAction,
   removeMemberAction,
+  removePaymentAction,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -61,8 +63,12 @@ export default async function GroupPage({ params }: Props) {
   const { id } = await params;
   const { group, settlement } = await load(id);
   const names = new Map(group.members.map((m) => [m.id, m.name]));
-  const involved = new Set(group.expenses.flatMap((e) => [e.payerId, ...e.participants.map((p) => p.memberId)]));
+  const involved = new Set([
+    ...group.expenses.flatMap((e) => [e.payerId, ...e.participants.map((p) => p.memberId)]),
+    ...group.payments.flatMap((p) => [p.fromId, p.toId]),
+  ]);
   const ids = { groupId: group.id };
+  const hasActivity = group.expenses.length > 0 || group.payments.length > 0;
 
   return (
     <div className="space-y-8">
@@ -115,8 +121,8 @@ export default async function GroupPage({ params }: Props) {
                   <p className="truncate text-sm text-muted">{m.pixKey ? `PIX: ${m.pixKey}` : 'sem chave PIX'}</p>
                 </div>
                 {involved.has(m.id) ? (
-                  <span className="text-xs text-muted" title="Tem despesa no nome — remova as despesas antes">
-                    🔒 em despesas
+                  <span className="text-xs text-muted" title="Tem despesa ou pagamento no nome — remova-os antes">
+                    🔒 em despesas/pagamentos
                   </span>
                 ) : (
                   <ActionButton
@@ -187,7 +193,7 @@ export default async function GroupPage({ params }: Props) {
           id="acerto"
           emoji="🤝"
           aside={
-            group.expenses.length > 0 ? (
+            hasActivity ? (
               <WhatsAppSummaryButton text={buildWhatsAppSummary(group.name, settlement)} />
             ) : undefined
           }
@@ -195,7 +201,7 @@ export default async function GroupPage({ params }: Props) {
           Acerto
         </SectionTitle>
 
-        {group.expenses.length === 0 ? (
+        {!hasActivity ? (
           <p className="rounded-xl bg-surface-2 p-3 text-sm">Sem despesas, sem dívidas. Lança a primeira aí em cima! 🍻</p>
         ) : (
           <>
@@ -223,6 +229,8 @@ export default async function GroupPage({ params }: Props) {
                       <span className="text-ink/80">
                         {' '}
                         · pagou {formatBRL(b.paidCents)} · consumiu {formatBRL(b.owedCents)}
+                        {b.sentCents > 0 && ` · enviou ${formatBRL(b.sentCents)}`}
+                        {b.receivedCents > 0 && ` · recebeu ${formatBRL(b.receivedCents)}`}
                       </span>
                     </p>
                   </li>
@@ -240,11 +248,46 @@ export default async function GroupPage({ params }: Props) {
             ) : (
               <ul className="space-y-3">
                 {settlement.transfers.map((t) => (
-                  <li key={`${t.fromId}-${t.toId}`}>
-                    <TransferCard transfer={t} />
+                  // amountCents na key: após um pagamento parcial o valor pré-preenchido é recalculado.
+                  <li key={`${t.fromId}-${t.toId}-${t.amountCents}`}>
+                    <TransferCard transfer={t} groupId={group.id} registerAction={registerPaymentAction} />
                   </li>
                 ))}
               </ul>
+            )}
+
+            {group.payments.length > 0 && (
+              <>
+                <h3 className="mt-6 mb-2 text-sm font-extrabold tracking-wide text-muted uppercase">
+                  Pagamentos registrados ({group.payments.length})
+                </h3>
+                <ul className="space-y-2">
+                  {group.payments.map((p) => (
+                    <li key={p.id} className="flex items-center gap-3 rounded-xl border-2 border-pos/40 bg-pos-soft/50 p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                          <p className="font-bold break-words">
+                            {names.get(p.fromId) ?? '?'} <span aria-label="pagou para">→</span> {names.get(p.toId) ?? '?'}
+                          </p>
+                          <p className="font-black tabular-nums">{formatBRL(p.amountCents)}</p>
+                        </div>
+                        <p className="text-sm text-muted">
+                          <time dateTime={p.createdAt}>{timeFmt.format(new Date(p.createdAt))}</time>
+                        </p>
+                      </div>
+                      <ActionButton
+                        action={removePaymentAction}
+                        fields={{ ...ids, paymentId: p.id }}
+                        label={`Desfazer pagamento de ${names.get(p.fromId) ?? '?'} para ${names.get(p.toId) ?? '?'}`}
+                        pendingLabel="Desfazendo pagamento…"
+                        className="btn btn-ghost text-sm"
+                      >
+                        ↩ Desfazer
+                      </ActionButton>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </>
         )}
