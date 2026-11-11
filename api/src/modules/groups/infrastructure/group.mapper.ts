@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import { PersonName } from '../../people/domain/value-objects/person-name.vo';
+import { PixKey } from '../../people/domain/value-objects/pix-key.vo';
 import { Expense } from '../domain/entities/expense.entity';
 import { Member } from '../domain/entities/member.entity';
 import { Payment } from '../domain/entities/payment.entity';
@@ -7,12 +9,10 @@ import { Group } from '../domain/group.aggregate';
 import { AmountCents } from '../domain/value-objects/amount-cents.vo';
 import { ExpenseDescription } from '../domain/value-objects/expense-description.vo';
 import { GroupName } from '../domain/value-objects/group-name.vo';
-import { MemberName } from '../domain/value-objects/member-name.vo';
-import { PixKey } from '../domain/value-objects/pix-key.vo';
 import { Weight } from '../domain/value-objects/weight.vo';
 
 export const groupInclude = {
-  members: { orderBy: { position: 'asc' } },
+  members: { orderBy: { position: 'asc' }, include: { person: true } },
   expenses: {
     orderBy: { position: 'asc' },
     include: { participants: { orderBy: { position: 'asc' } } },
@@ -30,9 +30,9 @@ export function toDomain(row: GroupRow): Group {
     createdAt: row.createdAt,
     members: row.members.map((m) =>
       Member.restore({
-        id: UniqueEntityId.create(m.id),
-        name: MemberName.create(m.name),
-        pixKey: PixKey.createOptional(m.pixKey),
+        id: UniqueEntityId.create(m.personId),
+        name: PersonName.create(m.person.name),
+        pixKey: PixKey.createOptional(m.person.pixKey),
       }),
     ),
     expenses: row.expenses.map((e) =>
@@ -66,10 +66,8 @@ export function toPersistence(group: Group) {
   return {
     group: { id: groupId, name: group.name.value, createdAt: group.createdAt },
     members: group.members.map((m, position) => ({
-      id: m.id.value,
       groupId,
-      name: m.name.value,
-      pixKey: m.pixKey?.value ?? null,
+      personId: m.id.value,
       position,
     })),
     expenses: group.expenses.map((e, position) => ({

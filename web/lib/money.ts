@@ -61,3 +61,15 @@ function isGrouped(value: string, sep: string): boolean {
   const [first, ...rest] = groups;
   return !!first && /^\d{1,3}$/.test(first) && rest.every((g) => /^\d{3}$/.test(g));
 }
+
+const brlCompact = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/** Formato curto para eixos de gráfico: 250000 → "R$ 2,5 mil". */
+export function formatBRLCompact(cents: number): string {
+  return brlCompact.format(cents / 100);
+}

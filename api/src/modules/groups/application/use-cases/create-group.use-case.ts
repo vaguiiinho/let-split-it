@@ -1,5 +1,5 @@
 import { Group } from '../../domain/group.aggregate';
-import { Clock } from '../../domain/clock.port';
+import { Clock } from '../../../../shared/domain/clock.port';
 import { GroupRepository } from '../../domain/group.repository';
 import { GroupName } from '../../domain/value-objects/group-name.vo';
 import { GroupDetailOutput, toGroupDetailOutput } from '../dto/group-detail.output';

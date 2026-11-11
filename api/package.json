@@ -12,6 +12,7 @@
     "test:e2e": "prisma generate && node scripts/e2e.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
+    "db:reset": "node scripts/ensure-env.js && prisma generate && prisma db push --force-reset",
     "db:setup": "node scripts/ensure-env.js && prisma generate && prisma db push"
   },
   "dependencies": {

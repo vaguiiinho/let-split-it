@@ -87,7 +87,7 @@ function ExpenseFormInner({ action, groupId, members, onDone }: Props & { onDone
         <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <button
             type="button"
-            className="rounded font-bold text-brand underline underline-offset-2"
+            className="rounded font-bold text-link underline underline-offset-2"
             onClick={() => setSelected(checked.length === allIds.length ? [] : allIds)}
           >
             {checked.length === allIds.length ? 'Desmarcar todos' : 'Marcar todos'}

@@ -1,12 +1,19 @@
 import 'server-only';
 
 import type {
+  AddMemberInput,
   ApiErrorBody,
   CreateExpenseInput,
+  CreatePersonInput,
+  Dashboard,
   GroupDetail,
   GroupSummary,
+  Person,
+  PersonDetail,
+  PersonSummary,
   RegisterPaymentInput,
   Settlement,
+  UpdatePersonInput,
 } from './types';
 
 export type * from './types';
@@ -86,8 +93,10 @@ export const api = {
   getGroup: (id: string) => request<GroupDetail>(`/groups/${enc(id)}`),
   createGroup: (name: string) =>
     request<GroupDetail>('/groups', { method: 'POST', body: json({ name }) }),
+  updateGroup: (id: string, name: string) =>
+    request<GroupDetail>(`/groups/${enc(id)}`, { method: 'PATCH', body: json({ name }) }),
   deleteGroup: (id: string) => request<void>(`/groups/${enc(id)}`, { method: 'DELETE' }),
-  addMember: (groupId: string, input: { name: string; pixKey?: string }) =>
+  addMember: (groupId: string, input: AddMemberInput) =>
     request<GroupDetail>(`/groups/${enc(groupId)}/members`, {
       method: 'POST',
       body: json(input),
@@ -116,6 +125,16 @@ export const api = {
     }),
   getSettlement: (groupId: string) =>
     request<Settlement>(`/groups/${enc(groupId)}/settlement`),
+
+  listPeople: () => request<PersonSummary[]>('/people'),
+  getPerson: (id: string) => request<PersonDetail>(`/people/${enc(id)}`),
+  createPerson: (input: CreatePersonInput) =>
+    request<Person>('/people', { method: 'POST', body: json(input) }),
+  updatePerson: (id: string, input: UpdatePersonInput) =>
+    request<Person>(`/people/${enc(id)}`, { method: 'PATCH', body: json(input) }),
+  deletePerson: (id: string) => request<void>(`/people/${enc(id)}`, { method: 'DELETE' }),
+
+  getDashboard: () => request<Dashboard>('/dashboard'),
 };
 
 /** Converte qualquer erro em mensagem amigável para exibir ao usuário. */

@@ -7,28 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Group {
-  id        String    @id
-  name      String
-  createdAt DateTime
-  members   Member[]
-  expenses  Expense[]
-  payments  Payment[]
-}
-
-model Member {
+model Person {
   id               String               @id
-  groupId          String
   name             String
+  nameKey          String               @unique
   pixKey           String?
-  position         Int
-  group            Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt        DateTime
+  memberships      GroupMember[]
   paid             Expense[]
   shares           ExpenseParticipant[]
   paymentsSent     Payment[]            @relation("PaymentFrom")
   paymentsReceived Payment[]            @relation("PaymentTo")
+}
 
-  @@index([groupId])
+model Group {
+  id        String        @id
+  name      String
+  createdAt DateTime
+  members   GroupMember[]
+  expenses  Expense[]
+  payments  Payment[]
+}
+
+model GroupMember {
+  groupId  String
+  personId String
+  position Int
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@id([groupId, personId])
+  @@index([personId])
 }
 
 model Expense {
@@ -40,7 +49,7 @@ model Expense {
   createdAt    DateTime
   position     Int
   group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  payer        Member               @relation(fields: [payerId], references: [id], onDelete: Cascade)
+  payer        Person               @relation(fields: [payerId], references: [id], onDelete: Restrict)
   participants ExpenseParticipant[]
 
   @@index([groupId])
@@ -52,7 +61,7 @@ model ExpenseParticipant {
   weight    Int
   position  Int
   expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member    Person  @relation(fields: [memberId], references: [id], onDelete: Restrict)
 
   @@id([expenseId, memberId])
 }
@@ -66,8 +75,8 @@ model Payment {
   createdAt   DateTime
   position    Int
   group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  from        Member   @relation("PaymentFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  to          Member   @relation("PaymentTo", fields: [toId], references: [id], onDelete: Cascade)
+  from        Person   @relation("PaymentFrom", fields: [fromId], references: [id], onDelete: Restrict)
+  to          Person   @relation("PaymentTo", fields: [toId], references: [id], onDelete: Restrict)
 
   @@index([groupId])
 }

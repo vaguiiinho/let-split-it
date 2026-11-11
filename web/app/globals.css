@@ -1,57 +1,48 @@
 @import 'tailwindcss';
 
-/* ===== Racha Aí — tokens (ver DESIGN.md) ===== */
+/* ===== Racha Aí — tema escuro único (ver DESIGN.md / spec 003) ===== */
 :root {
-  --bg: #fff7e8;
-  --surface: #ffffff;
-  --surface-2: #fff0d6;
-  --ink: #1e1a2b;
-  --muted: #554e69;
-  --line: #1e1a2b;
-  --shadow: #1e1a2b;
-  --brand: #0a7457;
+  --bg-base: #0f141c;
+  --bg: rgb(37 45 60 / 0.7); /* sobre --bg-base ≈ #1E2632 */
+  --surface: #1c2330;
+  --surface-2: #252d3c;
+  --line: #333d50;
+  --shadow: #0b0f15;
+  --muted: #7a8497; /* cor pedida: só em texto ≥ 14px (~4.2:1 no cartão) */
+  --muted-strong: #a3acbd; /* texto xs, hints, legendas (~6.9:1) */
+  --ink: #e6eaf2;
+  --brand: #4f46e5; /* nunca como cor de texto */
+  --brand-hover: #4338ca;
   --brand-ink: #ffffff;
-  --accent: #ffb020;
+  --link: #a5b4fc;
+  --focus: #a5b4fc;
+  --accent: #ffc24d;
   --accent-ink: #1e1a2b;
-  --pos: #0a7457;
-  --pos-soft: #dff5ea;
-  --neg: #b4233a;
-  --neg-soft: #fde4e7;
-  --focus: #6d28d9;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15121d;
-    --surface: #211b2d;
-    --surface-2: #2b2339;
-    --ink: #f6f1ff;
-    --muted: #bdb3d1;
-    --line: #5a4f73;
-    --shadow: #000000;
-    --brand: #3ddc97;
-    --brand-ink: #0b1c14;
-    --accent: #ffc24d;
-    --accent-ink: #1e1a2b;
-    --pos: #4ade9b;
-    --pos-soft: #12301f;
-    --neg: #ff8597;
-    --neg-soft: #3a1820;
-    --focus: #c9adff;
-    color-scheme: dark;
-  }
+  --pos: #4ade80;
+  --pos-soft: rgb(74 222 128 / 0.12);
+  --neg: #f87171;
+  --neg-soft: rgb(248 113 113 / 0.12);
+  --chart-1: #818cf8;
+  --chart-2: #4ade80;
+  --chart-3: #ffc24d;
+  --chart-4: #f87171;
+  --chart-5: #38bdf8;
+  color-scheme: dark;
 }
 
 @theme inline {
+  --color-bg-base: var(--bg-base);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
   --color-line: var(--line);
   --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
   --color-brand-ink: var(--brand-ink);
+  --color-link: var(--link);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-pos: var(--pos);
@@ -59,6 +50,11 @@
   --color-neg: var(--neg);
   --color-neg-soft: var(--neg-soft);
   --color-focus: var(--focus);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --font-sans: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
   --shadow-sticker: 4px 4px 0 0 var(--shadow);
@@ -66,16 +62,28 @@
 }
 
 html {
-  background: var(--bg);
+  background: var(--bg-base);
+  /* compensa a navbar fixa ao pular para âncoras (#novo, #conteudo) */
+  scroll-padding-top: calc(var(--shell-top, 0px) + 5rem);
 }
 
 body {
   background-color: var(--bg);
-  background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
-  background-size: 18px 18px;
-  color: var(--ink);
+  color: var(--muted);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  /* Títulos, valores e rótulos em --ink; utilitários (text-*) continuam vencendo por camada. */
+  :where(h1, h2, h3, h4, strong, b, label, legend, dt, th, .font-black, .font-extrabold, .tabular-nums) {
+    color: var(--ink);
+  }
+  :where(a:not([class])) {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 
 :focus-visible {
@@ -90,38 +98,45 @@ body {
   }
   .btn {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-line px-4 py-2 font-bold
-      shadow-sticker-sm transition-[transform,box-shadow] duration-100 select-none
+      shadow-sticker-sm transition-[transform,box-shadow,background-color] duration-100 select-none
       active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
       disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
-    @apply bg-brand text-brand-ink;
+    @apply border-brand bg-brand text-brand-ink hover:border-brand-hover hover:bg-brand-hover;
   }
   .btn-accent {
     @apply bg-accent text-accent-ink;
   }
   .btn-ghost {
-    @apply bg-surface text-ink;
+    @apply bg-surface-2 text-ink hover:bg-line;
   }
   .btn-danger {
-    @apply bg-surface text-neg;
+    @apply bg-surface-2 text-neg hover:bg-neg-soft;
   }
   .btn-icon {
-    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-lg text-muted hover:bg-neg-soft hover:text-neg
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-lg text-muted-strong hover:bg-neg-soft hover:text-neg
       disabled:opacity-50;
   }
   .field-label {
-    @apply mb-1 block text-sm font-bold;
+    @apply mb-1 block text-sm font-bold text-ink;
   }
   .input {
-    @apply min-h-11 w-full rounded-xl border-2 border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted
+    @apply min-h-11 w-full rounded-xl border-2 border-line bg-surface-2 px-3 py-2 text-base text-ink placeholder:text-muted-strong
       focus-visible:outline-offset-0;
   }
   .hint {
-    @apply mt-1 text-xs text-muted;
+    @apply mt-1 text-xs text-muted-strong;
   }
   .alert-error {
     @apply mt-3 rounded-xl border-2 border-neg bg-neg-soft px-3 py-2 text-sm font-semibold text-neg;
+  }
+  .nav-link {
+    @apply flex min-h-11 items-center gap-3 rounded-xl border-2 border-transparent px-3 py-2 font-bold text-muted-strong
+      hover:bg-surface-2 hover:text-ink;
+  }
+  .nav-link[aria-current='page'] {
+    @apply border-line bg-surface-2 text-ink shadow-sticker-sm;
   }
 }
 

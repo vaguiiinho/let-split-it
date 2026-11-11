@@ -1,4 +1,4 @@
-import { requireText } from './text';
+import { requireText } from '../../../../shared/domain/value-objects/text';
 
 export class ExpenseDescription {
   static readonly MAX = 80;

@@ -45,7 +45,7 @@ export function TransferCard({
       {pixPayload ? (
         <div className="mt-3 space-y-2">
           <label className="block">
-            <span className="text-xs font-bold text-muted">PIX copia e cola</span>
+            <span className="text-xs font-bold text-muted-strong">PIX copia e cola</span>
             <input
               readOnly
               value={pixPayload}

@@ -1,16 +1,10 @@
-import Link from 'next/link';
+import { NotFoundState } from '@/features/ui/NotFoundState';
 
+// Rotas inexistentes caem aqui, fora do shell (route group (app)).
 export default function NotFound() {
   return (
-    <div className="card text-center">
-      <p aria-hidden className="text-5xl">
-        🕵️
-      </p>
-      <h1 className="mt-3 text-2xl font-black">Esse rolê sumiu do mapa</h1>
-      <p className="mt-2 text-muted">Talvez ele tenha sido excluído, ou o link veio errado no grupo.</p>
-      <Link href="/" className="btn btn-primary mt-5">
-        Voltar pros rolês
-      </Link>
-    </div>
+    <main id="conteudo" tabIndex={-1} className="mx-auto max-w-xl px-4 py-16 focus:outline-none">
+      <NotFoundState title="Essa página sumiu do mapa" description="O link pode estar errado ou a página mudou de lugar." backHref="/" backLabel="Ir para o início" />
+    </main>
   );
 }

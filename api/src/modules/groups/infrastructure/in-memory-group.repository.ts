@@ -9,6 +9,10 @@ export class InMemoryGroupRepository implements GroupRepository {
     return this.items.get(id.value) ?? null;
   }
 
+  async findAll(): Promise<Group[]> {
+    return [...this.items.values()];
+  }
+
   async listSummaries(): Promise<GroupSummary[]> {
     return [...this.items.values()].map((g) => ({
       id: g.id.value,

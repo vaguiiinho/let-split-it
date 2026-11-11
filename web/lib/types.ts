@@ -1,5 +1,6 @@
-// Tipos do contrato HTTP da API (spec 001). Valores monetários sempre em centavos.
+// Tipos do contrato HTTP da API (specs 001–003). Valores monetários sempre em centavos.
 
+/** Participante do rolê. Desde a spec 003, `id` é o id da pessoa (`personId`). */
 export interface Member {
   id: string;
   name: string;
@@ -87,6 +88,61 @@ export interface RegisterPaymentInput {
   fromId: string;
   toId: string;
   amountCents: number;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  pixKey: string | null;
+  createdAt: string;
+}
+
+export interface PersonSummary extends Person {
+  groupCount: number;
+}
+
+export interface PersonGroup {
+  id: string;
+  name: string;
+  createdAt: string;
+  memberCount: number;
+  totalCents: number;
+}
+
+export interface PersonDetail extends Person {
+  /** Rolês de que a pessoa participa (mais recente primeiro). */
+  groups: PersonGroup[];
+}
+
+export interface CreatePersonInput {
+  name: string;
+  pixKey?: string | null;
+}
+
+/** `pixKey: null` (ou '') limpa a chave. Ao menos um campo é obrigatório. */
+export interface UpdatePersonInput {
+  name?: string;
+  pixKey?: string | null;
+}
+
+export type AddMemberInput = { personId: string } | { name: string; pixKey?: string };
+
+export interface Dashboard {
+  totals: {
+    spentCents: number;
+    settledCents: number;
+    pendingCents: number;
+    groupCount: number;
+    peopleCount: number;
+    expenseCount: number;
+  };
+  groupsByStatus: { settled: number; pending: number; empty: number };
+  /** Até 8 rolês com maior total (> 0), em ordem decrescente. */
+  byGroup: { groupId: string; name: string; totalCents: number }[];
+  /** Até 5 pessoas que mais pagaram despesas, em ordem decrescente. */
+  topPayers: { personId: string; name: string; paidCents: number }[];
+  /** 6 meses (YYYY-MM), do mais antigo ao mais recente. */
+  byMonth: { month: string; totalCents: number }[];
 }
 
 export interface ApiErrorBody {

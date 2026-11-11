@@ -1,5 +1,6 @@
 import { ConflictError, NotFoundError, ValidationError } from '../../../shared/domain/errors';
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import { Person } from '../../people/domain/person.entity';
 import { Expense, ExpenseParticipant } from './entities/expense.entity';
 import { Member } from './entities/member.entity';
 import { Payment } from './entities/payment.entity';
@@ -12,9 +13,7 @@ import {
 import { AmountCents } from './value-objects/amount-cents.vo';
 import { ExpenseDescription } from './value-objects/expense-description.vo';
 import { GroupName } from './value-objects/group-name.vo';
-import { MemberName } from './value-objects/member-name.vo';
 import { Money } from './value-objects/money.vo';
-import { PixKey } from './value-objects/pix-key.vo';
 
 export interface GroupSnapshot {
   id: UniqueEntityId;
@@ -37,7 +36,7 @@ export interface NewExpenseInput {
 export class Group {
   private constructor(
     readonly id: UniqueEntityId,
-    private readonly _name: GroupName,
+    private _name: GroupName,
     readonly createdAt: Date,
     private readonly _members: Member[],
     private readonly _expenses: Expense[],
@@ -55,6 +54,10 @@ export class Group {
 
   get name(): GroupName {
     return this._name;
+  }
+
+  rename(name: GroupName): void {
+    this._name = name;
   }
 
   get members(): readonly Member[] {
@@ -77,11 +80,11 @@ export class Group {
     return this._members.find((m) => m.id.equals(id));
   }
 
-  addMember(name: MemberName, pixKey: PixKey | null): Member {
-    if (this._members.some((m) => m.name.equalsIgnoreCase(name))) {
-      throw new ConflictError(`Já existe uma pessoa chamada "${name.value}" neste rolê`);
+  addMember(person: Person): Member {
+    if (this.findMember(person.id)) {
+      throw new ConflictError(`${person.name.value} já está neste rolê`);
     }
-    const member = Member.create({ name, pixKey });
+    const member = Member.fromPerson(person);
     this._members.push(member);
     return member;
   }

@@ -1,5 +1,5 @@
 import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
-import { Clock } from '../../domain/clock.port';
+import { Clock } from '../../../../shared/domain/clock.port';
 import { GroupRepository } from '../../domain/group.repository';
 import { AmountCents } from '../../domain/value-objects/amount-cents.vo';
 import { ExpenseDescription } from '../../domain/value-objects/expense-description.vo';

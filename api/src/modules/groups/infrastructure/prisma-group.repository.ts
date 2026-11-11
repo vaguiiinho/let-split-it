@@ -17,6 +17,14 @@ export class PrismaGroupRepository implements GroupRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findAll(): Promise<Group[]> {
+    const rows = await this.prisma.group.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: groupInclude,
+    });
+    return rows.map(toDomain);
+  }
+
   async listSummaries(): Promise<GroupSummary[]> {
     const [groups, totals] = await Promise.all([
       this.prisma.group.findMany({
@@ -47,8 +55,8 @@ export class PrismaGroupRepository implements GroupRepository {
       });
       await tx.payment.deleteMany({ where: { groupId: data.group.id } });
       await tx.expense.deleteMany({ where: { groupId: data.group.id } });
-      await tx.member.deleteMany({ where: { groupId: data.group.id } });
-      if (data.members.length) await tx.member.createMany({ data: data.members });
+      await tx.groupMember.deleteMany({ where: { groupId: data.group.id } });
+      if (data.members.length) await tx.groupMember.createMany({ data: data.members });
       for (const { participants, ...expense } of data.expenses) {
         await tx.expense.create({ data: { ...expense, participants: { create: participants } } });
       }

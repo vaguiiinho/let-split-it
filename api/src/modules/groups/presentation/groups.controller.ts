@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
 import { AddExpenseUseCase } from '../application/use-cases/add-expense.use-case';
 import { AddMemberUseCase } from '../application/use-cases/add-member.use-case';
 import { CreateGroupUseCase } from '../application/use-cases/create-group.use-case';
@@ -6,6 +6,7 @@ import { DeleteGroupUseCase } from '../application/use-cases/delete-group.use-ca
 import { GetGroupUseCase } from '../application/use-cases/get-group.use-case';
 import { GetSettlementUseCase } from '../application/use-cases/get-settlement.use-case';
 import { ListGroupsUseCase } from '../application/use-cases/list-groups.use-case';
+import { UpdateGroupUseCase } from '../application/use-cases/update-group.use-case';
 import { RegisterPaymentUseCase } from '../application/use-cases/register-payment.use-case';
 import { RemoveExpenseUseCase } from '../application/use-cases/remove-expense.use-case';
 import { RemoveMemberUseCase } from '../application/use-cases/remove-member.use-case';
@@ -14,6 +15,7 @@ import { AddExpenseDto } from './dto/add-expense.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { RegisterPaymentDto } from './dto/register-payment.dto';
+import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Controller('groups')
 export class GroupsController {
@@ -21,6 +23,7 @@ export class GroupsController {
     private readonly createGroup: CreateGroupUseCase,
     private readonly listGroups: ListGroupsUseCase,
     private readonly getGroup: GetGroupUseCase,
+    private readonly updateGroup: UpdateGroupUseCase,
     private readonly deleteGroup: DeleteGroupUseCase,
     private readonly addMember: AddMemberUseCase,
     private readonly removeMember: RemoveMemberUseCase,
@@ -46,6 +49,11 @@ export class GroupsController {
     return this.getGroup.execute({ groupId: id });
   }
 
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateGroupDto) {
+    return this.updateGroup.execute({ groupId: id, name: dto.name });
+  }
+
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id') id: string): Promise<void> {
@@ -54,7 +62,12 @@ export class GroupsController {
 
   @Post(':id/members')
   postMember(@Param('id') id: string, @Body() dto: AddMemberDto) {
-    return this.addMember.execute({ groupId: id, name: dto.name, pixKey: dto.pixKey ?? null });
+    return this.addMember.execute({
+      groupId: id,
+      personId: dto.personId,
+      name: dto.name,
+      pixKey: dto.pixKey,
+    });
   }
 
   @Delete(':id/members/:memberId')

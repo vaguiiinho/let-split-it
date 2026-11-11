@@ -1,7 +1,7 @@
 import { computeBalances, computeSettlement, computeTransfers, Balance } from './settlement.service';
 import { Group } from '../group.aggregate';
 import { GroupName } from '../value-objects/group-name.vo';
-import { MemberName } from '../value-objects/member-name.vo';
+import { makePerson } from '../../testing/fixtures';
 import { AmountCents } from '../value-objects/amount-cents.vo';
 import { ExpenseDescription } from '../value-objects/expense-description.vo';
 import { Weight } from '../value-objects/weight.vo';
@@ -13,7 +13,7 @@ const C = { id: 'c', name: 'C' };
 describe('settlement', () => {
   it('cenário da spec: A pagou 90 e B pagou 30, entre A,B,C → C→A 4000, B→A 1000', () => {
     const g = Group.create({ name: GroupName.create('Churras') }, new Date());
-    const [a, b, c] = ['A', 'B', 'C'].map((n) => g.addMember(MemberName.create(n), null));
+    const [a, b, c] = ['A', 'B', 'C'].map((n) => g.addMember(makePerson(n)));
     const all = [a, b, c].map((m) => ({ memberId: m.id, weight: Weight.create() }));
     const exp = (d: string, v: number, payer: typeof a) => ({
       description: ExpenseDescription.create(d),

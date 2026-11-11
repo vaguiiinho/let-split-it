@@ -1,14 +1,19 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
+/** A regra "exatamente um formato" (personId OU name) fica no use case. */
 export class AddMemberDto {
+  @IsOptional()
+  @IsString({ message: 'personId deve ser texto' })
+  personId?: string;
+
+  @IsOptional()
   @Transform(trim)
   @IsString({ message: 'name deve ser texto' })
-  @MinLength(1, { message: 'name é obrigatório' })
   @MaxLength(40, { message: 'name deve ter no máximo 40 caracteres' })
-  name!: string;
+  name?: string;
 
   @IsOptional()
   @Transform(trim)

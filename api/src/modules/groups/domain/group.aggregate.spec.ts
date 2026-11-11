@@ -1,20 +1,19 @@
 import { ConflictError, NotFoundError, ValidationError } from '../../../shared/domain/errors';
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import { makePerson } from '../testing/fixtures';
 import { Group } from './group.aggregate';
 import { AmountCents } from './value-objects/amount-cents.vo';
 import { ExpenseDescription } from './value-objects/expense-description.vo';
 import { GroupName } from './value-objects/group-name.vo';
-import { MemberName } from './value-objects/member-name.vo';
-import { PixKey } from './value-objects/pix-key.vo';
 import { Weight } from './value-objects/weight.vo';
 
 const now = new Date();
 
 function setup() {
   const g = Group.create({ name: GroupName.create('  Viagem  ') }, now);
-  const ana = g.addMember(MemberName.create('Ana'), PixKey.createOptional('ana@pix.com'));
-  const bia = g.addMember(MemberName.create('Bia'), null);
-  const cadu = g.addMember(MemberName.create('Cadu'), null);
+  const ana = g.addMember(makePerson('Ana', 'ana@pix.com'));
+  const bia = g.addMember(makePerson('Bia'));
+  const cadu = g.addMember(makePerson('Cadu'));
   const all = [ana, bia, cadu].map((m) => ({ memberId: m.id, weight: Weight.create() }));
   const expense = (v: number, payerId: UniqueEntityId, participants = all) => ({
     description: ExpenseDescription.create('Pizza'),
@@ -33,9 +32,21 @@ describe('Group aggregate', () => {
     expect(Group.create({ name: g.name }, now, g.id).id.equals(g.id)).toBe(true);
   });
 
-  it('nome de pessoa único case-insensitive → conflito', () => {
+  it('mesma pessoa duas vezes → conflito; id do membro é o personId', () => {
+    const { g, ana } = setup();
+    const person = makePerson('Dani');
+    const m = g.addMember(person);
+    expect(m.id.equals(person.id)).toBe(true);
+    expect(() => g.addMember(person)).toThrow('Dani já está neste rolê');
+    expect(() => g.addMember(person)).toThrow(ConflictError);
+    expect(g.members[0].id.equals(ana.id)).toBe(true);
+  });
+
+  it('rename valida GroupName', () => {
     const { g } = setup();
-    expect(() => g.addMember(MemberName.create(' ana '), null)).toThrow(ConflictError);
+    g.rename(GroupName.create(' Praia '));
+    expect(g.name.value).toBe('Praia');
+    expect(() => GroupName.create('')).toThrow('Nome do rolê');
   });
 
   it('valida membros em despesas', () => {

@@ -13,7 +13,7 @@ export function WhatsAppSummaryButton({ text }: { text: string }) {
         href={`https://wa.me/?text=${encodeURIComponent(text)}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded text-sm font-bold text-brand underline underline-offset-2"
+        className="rounded text-sm font-bold text-link underline underline-offset-2"
       >
         Abrir no WhatsApp<span className="sr-only"> (abre em nova aba)</span>
       </a>

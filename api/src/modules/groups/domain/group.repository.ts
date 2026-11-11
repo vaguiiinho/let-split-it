@@ -13,6 +13,7 @@ export interface GroupSummary {
 /** Porta de persistência do aggregate Group. */
 export interface GroupRepository {
   findById(id: UniqueEntityId): Promise<Group | null>;
+  findAll(): Promise<Group[]>;
   listSummaries(): Promise<GroupSummary[]>;
   save(group: Group): Promise<void>;
   delete(id: UniqueEntityId): Promise<boolean>;

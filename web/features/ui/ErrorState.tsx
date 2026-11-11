@@ -30,13 +30,13 @@ export function ErrorState({
       ) : (
         <p className="mt-2">{error.message}</p>
       )}
-      {error.digest && <p className="mt-2 text-xs text-muted">Código: {error.digest}</p>}
+      {error.digest && <p className="mt-2 text-xs text-muted-strong">Código: {error.digest}</p>}
       <div className="mt-5 flex flex-wrap gap-3">
         <button type="button" onClick={reset} className="btn btn-primary">
           Tentar de novo
         </button>
         {showBack && (
-          <Link href="/" className="btn btn-ghost">
+          <Link href="/groups" className="btn btn-ghost">
             Voltar pros rolês
           </Link>
         )}
