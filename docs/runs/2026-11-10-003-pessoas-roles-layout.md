@@ -24,10 +24,11 @@
 - api unit 98 PASS (30 suítes) · api e2e 17 PASS · web 46 PASS · typecheck/lint/build PASS.
 - Baseline: 78 / 12 / 33, tudo verde. Nenhuma regressão.
 
-## Follow-ups (🟡)
-1. `get-dashboard.use-case.ts:82` — `Intl.DateTimeFormat` por despesa; criar um no módulo.
-2. `MobileNav` — fechar o `<dialog>` ao passar para ≥ md (`matchMedia`).
-3. `web/lib/validation.ts` — `personId` sem `idSchema` (consistência).
-4. `update-person.dto.ts` — `IsOptional` em vez de `ValidateIf` (equivalente).
-5. Criação inline de pessoa + rolê em transações separadas (pessoa órfã se salvar o rolê falhar).
-6. Sem README na raiz para documentar `db:reset`.
+## Follow-ups (🟡) — resolvidos em seguida
+1. ✅ `get-dashboard.use-case.ts` — um `Intl.DateTimeFormat` no módulo.
+2. ✅ `MobileNav` — fecha o `<dialog>` ao passar para ≥ md (`matchMedia('(min-width: 48rem)')`).
+3. ✅ `web/lib/validation.ts` — `personId` usa o mesmo construtor do `idSchema` (`idWith`).
+4. ✅ `update-person.dto.ts` — `ValidateIf(v => v != null)` + `IsString`, como na spec; e2e cobre `pixKey: 123` → 400.
+5. ✅ Criação inline — se salvar o rolê falhar, a pessoa recém-criada é removida (2 testes novos).
+6. ⏭️ README — não recriado: foi removido deliberadamente no commit de CI. A nota de `db:reset` fica neste run.
+- Testes após os follow-ups: api unit 100 · e2e 17 · web 46 · typecheck/lint/build PASS.

@@ -292,6 +292,7 @@ describe('Racha Aí API (e2e)', () => {
       await http.patch(`/people/${zed.id}`).send({ extra: 1 }).expect(400);
       const patched = await http.patch(`/people/${zed.id}`).send({ name: 'ZED PESSOA', pixKey: null }).expect(200);
       expect(patched.body).toMatchObject({ name: 'ZED PESSOA', pixKey: null });
+      await http.patch(`/people/${zed.id}`).send({ pixKey: 123 }).expect(400);
 
       // delete
       const blocked = await http.delete(`/people/${zed.id}`).expect(409);

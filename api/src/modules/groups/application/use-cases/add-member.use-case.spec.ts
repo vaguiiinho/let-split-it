@@ -21,6 +21,23 @@ describe('AddMemberUseCase', () => {
     expect(await people.count()).toBe(5);
   });
 
+  it('falha ao salvar o rolê → remove a pessoa recém-criada (sem órfã)', async () => {
+    const { uc, gid, people, repo } = await setup();
+    const before = await people.count();
+    jest.spyOn(repo, 'save').mockRejectedValueOnce(new Error('db down'));
+    await expect(uc.execute({ groupId: gid, name: 'Fabi' })).rejects.toThrow('db down');
+    expect(await people.count()).toBe(before);
+  });
+
+  it('falha ao salvar o rolê → não remove pessoa que já existia', async () => {
+    const { uc, gid, people, repo } = await setup();
+    const zeca = makePerson('Zeca');
+    await people.save(zeca);
+    jest.spyOn(repo, 'save').mockRejectedValueOnce(new Error('db down'));
+    await expect(uc.execute({ groupId: gid, personId: zeca.id.value })).rejects.toThrow('db down');
+    expect(await people.findById(zeca.id)).not.toBeNull();
+  });
+
   it('adiciona pessoa existente por personId', async () => {
     const { uc, gid, people, repo } = await setup();
     const zeca = makePerson('Zeca', 'z@pix.com');

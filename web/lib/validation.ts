@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { ActionResult } from './types';
 
-export const idSchema = z.string().trim().min(1, 'Identificador inválido.').max(100);
+const idWith = (message: string) => z.string().trim().min(1, message).max(100);
+export const idSchema = idWith('Identificador inválido.');
 
 export const groupNameSchema = z
   .string()
@@ -30,7 +31,7 @@ export const personSchema = z.object({ name: personNameSchema, pixKey: pixKeySch
 /** Adicionar ao rolê uma pessoa já cadastrada. */
 export const addExistingMemberSchema = z.object({
   groupId: idSchema,
-  personId: z.string().trim().min(1, 'Escolha uma pessoa da lista.').max(100),
+  personId: idWith('Escolha uma pessoa da lista.'),
 });
 
 /** Criar uma pessoa nova (ou reaproveitar pelo nome) direto no rolê. */

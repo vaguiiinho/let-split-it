@@ -19,6 +19,16 @@ export function MobileNav() {
     if (dialog?.open) dialog.close();
   }, [pathname]);
 
+  // Em ≥ md o <dialog> some (md:hidden) mas seguiria modal, deixando a página inerte: fecha.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 48rem)');
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches && dialogRef.current?.open) dialogRef.current.close();
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   const close = () => dialogRef.current?.close();
 
   return (

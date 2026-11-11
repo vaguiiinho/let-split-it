@@ -11,6 +11,9 @@ const MONTHS = 6;
 const MAX_GROUPS = 8;
 const MAX_PAYERS = 5;
 
+/** Formatter reutilizado: criar um por despesa é caro. */
+const monthFmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: '2-digit' });
+
 const byNameAsc = (a: string, b: string) => a.localeCompare(b, 'pt-BR');
 
 export class GetDashboardUseCase {
@@ -79,11 +82,7 @@ export class GetDashboardUseCase {
 
   /** Chave YYYY-MM no fuso de São Paulo. */
   private monthKey(date: Date): string {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: TZ,
-      year: 'numeric',
-      month: '2-digit',
-    }).formatToParts(date);
+    const parts = monthFmt.formatToParts(date);
     const get = (t: string) => parts.find((p) => p.type === t)!.value;
     return `${get('year')}-${get('month')}`;
   }

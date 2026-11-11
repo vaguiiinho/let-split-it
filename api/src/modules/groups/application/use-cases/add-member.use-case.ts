@@ -30,9 +30,15 @@ export class AddMemberUseCase {
     const groupId = UniqueEntityId.create(input.groupId);
     const target = this.parseTarget(input);
     const group = await findGroupOrFail(this.repo, groupId);
-    const person = await this.resolvePerson(target);
-    group.addMember(person);
-    await this.repo.save(group);
+    const { person, created } = await this.resolvePerson(target);
+    try {
+      group.addMember(person);
+      await this.repo.save(group);
+    } catch (e) {
+      // Person e Group são salvos separadamente: desfaz a pessoa recém-criada para não deixá-la órfã.
+      if (created) await this.people.delete(person.id);
+      throw e;
+    }
     return toGroupDetailOutput(group);
   }
 
@@ -51,11 +57,11 @@ export class AddMemberUseCase {
     return { name: PersonName.create(input.name), pixKey: PixKey.createOptional(input.pixKey) };
   }
 
-  private async resolvePerson(target: Target): Promise<Person> {
+  private async resolvePerson(target: Target): Promise<{ person: Person; created: boolean }> {
     if ('personId' in target) {
       const person = await this.people.findById(target.personId);
       if (!person) throw new NotFoundError('Pessoa não encontrada');
-      return person;
+      return { person, created: false };
     }
     const existing = await this.people.findByNameKey(target.name.key);
     if (existing) {
@@ -64,13 +70,13 @@ export class AddMemberUseCase {
           `Já existe uma pessoa chamada "${existing.name.value}" com outra chave PIX. Selecione-a na lista ou edite a pessoa`,
         );
       }
-      return existing;
+      return { person: existing, created: false };
     }
     const person = Person.create(
       { name: target.name, pixKey: target.pixKey },
       this.clock.now(),
     );
     await this.people.save(person);
-    return person;
+    return { person, created: true };
   }
 }

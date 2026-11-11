@@ -264,7 +264,7 @@ Remover `app/page.tsx` antigo, `app/actions.ts` e `app/groups/**` (movidos).
 ## Riscos e dependências
 - **Breaking de dados:** é preciso rodar `db:reset`, o que apaga os dados de dev. Se alguma instância publicada (imagem no Docker Hub) tiver dados reais, seria necessário um script de migração `Member→Person` (fora de escopo). Sinalizar ao usuário antes de publicar.
 - **Semântica de ids:** `members[].id` passa a ser o `personId`. O formato não muda, mas os links e ids antigos guardados deixam de valer.
-- **Atomicidade em G3 (criar inline):** a Person é salva antes do Group, em transações separadas. Se o `save` do Group falhar, sobra uma pessoa sem rolê. É aceitável: ela aparece em `/people` e pode ser excluída. O rolê inexistente é checado antes, para evitar o caso comum.
+- **Atomicidade em G3 (criar inline):** a Person é salva antes do Group, em transações separadas. Se o `save` do Group falhar, o use case compensa e remove a pessoa recém-criada (pessoas que já existiam não são tocadas). O rolê inexistente é checado antes, para evitar o caso comum.
 - **Dashboard em memória** (`findAll`): é O(total de dados), aceitável no volume atual. Um read model SQL fica como evolução futura.
 - **Dependência entre módulos** `groups → people`, que exporta `PERSON_REPOSITORY`. `people` não pode importar `groups`. Os dados de rolê em `getDetail` vêm de uma consulta Prisma na infraestrutura de people.
 - **Contraste do `#7A8497`:** fica abaixo de AA em texto pequeno. A mitigação está na tabela de tokens.
