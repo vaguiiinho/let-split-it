@@ -17,7 +17,7 @@
 ## Decisões
 - Reset dos bancos locais (`racha_ai`, `racha_ai_test`) com consentimento explícito do usuário; o Prisma bloqueia `--force-reset` vindo de IA.
 - `scripts/e2e.js` usa `db push` **sem** `--force-reset` (desvio da spec) para não exigir consentimento a cada execução. Após atualizar para a spec 003 em outra máquina: `npm --prefix api run db:reset`.
-- Sugestões de layout em `/sugestoes/{a,b,c}`; oficial = A. Remoção: `grep -rln "remover-apos-escolha" web/app web/features`.
+- Sugestões de layout em `/sugestoes/{a,b,c}`; o usuário escolheu a **A** (sidebar fixa) e as sugestões foram removidas.
 - Contraste: `#7A8497` (≈4,2:1) só em texto ≥14px; títulos/valores `--ink`, texto pequeno `--muted-strong`.
 
 ## Testes finais

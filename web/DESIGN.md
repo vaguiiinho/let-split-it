@@ -16,7 +16,7 @@ sombra deslocada sólida (neo-brutalismo leve), emojis como ícones. Divertido, 
 | `ink` | #E6EAF2 | títulos `h1–h4`, valores, labels, `strong`, inputs (≥ 12:1) |
 | `brand` / `brand-hover` / `brand-ink` | #4F46E5 / #4338CA / #FFF | `btn-primary` (6.3:1). **Nunca como cor de texto** |
 | `link` / `focus` | #A5B4FC | links de texto e anel de foco 3px em todo `:focus-visible` |
-| `accent` / `accent-ink` | #FFC24D / #1E1A2B | destaques, logo, banner de sugestão (texto sempre escuro) |
+| `accent` / `accent-ink` | #FFC24D / #1E1A2B | destaques, logo (texto sempre escuro) |
 | `pos` / `pos-soft` | #4ADE80 / 12% | "recebe" |
 | `neg` / `neg-soft` | #F87171 / 12% | "deve", erros, excluir |
 | `chart-1..5` | #818CF8 #4ADE80 #FFC24D #F87171 #38BDF8 | séries de gráfico |
@@ -40,7 +40,7 @@ Alvos de toque ≥ 44px (`min-h-11`/`size-11`); botões "afundam" no `:active` (
   por prefixo). Itens em `nav-items.ts`.
 - `MobileNav` (client): `<dialog>` com `showModal()` como drawer à esquerda; foco preso e Esc pelo navegador,
   fecha no clique no backdrop, ao clicar num item e na mudança de rota; o foco volta ao botão Menu.
-- Sticky leva em conta `--shell-top` (0 por padrão; 2.75rem nas páginas de sugestão, por causa do banner).
+- Sticky leva em conta `--shell-top` (0 por padrão; reservado para uma faixa fixa acima da navbar).
 - `html { scroll-padding-top }` evita que âncoras fiquem sob a navbar.
 
 ## Páginas (spec 003)
@@ -71,12 +71,6 @@ ou `pos`/`neg` — cor sempre acompanhada do rótulo), `ActionButton`, `FormErro
 - `DonutChart`: anel com 2px de separação (`stroke surface`), total no centro, legenda com cor + nome + valor + %.
   "Pendente × Quitado" usa `chart-3` (âmbar) × `chart-1` (índigo): verde × âmbar falha em protanopia (ΔE 5,2).
 - Cores das séries só nas marcas; textos sempre `ink`/`muted-strong`. Um gráfico por ideia, nunca eixo duplo.
-
-## Sugestões de layout (temporário — remover após a escolha)
-`/sugestoes` (índice com prós/contras) e `/sugestoes/{a,b,c}` com dados fictícios (`features/sugestoes/`), fora do
-`(app)`. Banner `role="note"` amarelo fixo no topo "SUGESTÃO — REMOVER APÓS A ESCOLHA".
-A = shell oficial; B = trilho de ícones recolhível (4rem ↔ 16rem, `localStorage`) + topbar com busca visual;
-C = tabs no topo + atalhos contextuais à direita. Remoção: `grep -rln "remover-apos-escolha" web/app web/features` e apague os arquivos listados, exceto `Footer.tsx` (lá sai só a linha do link).
 
 ## Padrões
 - Mobile-first, coluna única até `sm`, grid 2 col em listas de rolês/pessoas/saldos e nos gráficos (≥ md).
