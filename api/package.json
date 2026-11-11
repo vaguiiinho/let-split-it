@@ -2,14 +2,14 @@
   "name": "racha-ai-api",
   "version": "1.0.0",
   "private": true,
-  "description": "API do Racha Aí (NestJS + Prisma/SQLite)",
+  "description": "API do Racha Aí (NestJS + Prisma/PostgreSQL)",
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "test": "jest --config jest.config.js",
     "test:cov": "jest --config jest.config.js --coverage",
-    "test:e2e": "prisma generate && cross-env DATABASE_URL=file:./test.db prisma db push --skip-generate && cross-env DATABASE_URL=file:./test.db jest --config jest-e2e.config.js --runInBand",
+    "test:e2e": "prisma generate && node scripts/e2e.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "db:setup": "node scripts/ensure-env.js && prisma generate && prisma db push"

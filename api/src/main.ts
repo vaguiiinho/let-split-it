@@ -4,7 +4,6 @@ import { AppModule } from './app.module';
 import { configureApp } from './bootstrap';
 
 async function bootstrap(): Promise<void> {
-  process.env.DATABASE_URL ??= 'file:./dev.db';
   const app = configureApp(await NestFactory.create(AppModule));
   app.enableShutdownHooks();
   const port = Number(process.env.PORT ?? 3333);
