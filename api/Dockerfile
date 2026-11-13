@@ -15,4 +15,4 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma/schema.prisma ./prisma/schema.prisma
 USER node
 EXPOSE 3001
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && (node dist/main.js || node dist/src/main.js)"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db push && (node dist/main.js || node dist/src/main.js)"]
