@@ -5,10 +5,10 @@ on:
     branches: [ "main" ]
 
 env:
+  # Versão incrementada automaticamente a cada push (1.0.<nº da execução>)
   VERSION: 1.0.${{ github.run_number }}
-  REGISTRY_USER: vaguiiinho
-  API_IMAGE_NAME: finance-api
-  WEB_IMAGE_NAME: finance-web
+  API_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/let-split-it-api
+  WEB_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/let-split-it-web
 
 jobs:
   build-and-push:
@@ -27,30 +27,20 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # ==========================================
-      # BUILD E PUSH DA API (NestJS)
-      # ==========================================
-      - name: Build and push API image (NestJS)
+      - name: Build and push API (NestJS)
         uses: docker/build-push-action@v6
         with:
           context: ./api
-          file: ./api/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY_USER }}/${{ env.API_IMAGE_NAME }}:${{ env.VERSION }}
-          build-args: |
-            NODE_ENV=production
+            ${{ env.API_IMAGE }}:${{ env.VERSION }}
+            ${{ env.API_IMAGE }}:latest
 
-      # ==========================================
-      # BUILD E PUSH DO WEB (NextJS)
-      # ==========================================
-      - name: Build and push Web image (NextJS)
+      - name: Build and push Web (Next.js)
         uses: docker/build-push-action@v6
         with:
           context: ./web
-          file: ./web/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY_USER }}/${{ env.WEB_IMAGE_NAME }}:${{ env.VERSION }}
-          build-args: |
-            NODE_ENV=production
+            ${{ env.WEB_IMAGE }}:${{ env.VERSION }}
+            ${{ env.WEB_IMAGE }}:latest
