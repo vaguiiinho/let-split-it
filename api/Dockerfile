@@ -1,18 +1,28 @@
-FROM node:22-alpine AS build
+FROM node:22-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache openssl
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npx prisma generate && npm run build && npm prune --omit=dev
 
-FROM node:22-alpine
+FROM base AS dependencies
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma ./prisma
+RUN npm ci
+
+FROM dependencies AS build
+COPY . .
+RUN npm run build
+
+FROM base AS production-dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+
+FROM node:22-alpine AS runtime
 WORKDIR /app
-RUN apk add --no-cache openssl
-ENV NODE_ENV=production PORT=3001
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/prisma/schema.prisma ./prisma/schema.prisma
+ENV NODE_ENV=production
+COPY --chown=node:node --from=production-dependencies /app/node_modules ./node_modules
+COPY --chown=node:node --from=build /app/package.json ./package.json
+COPY --chown=node:node --from=build /app/dist ./dist
+COPY --chown=node:node --from=build /app/prisma ./prisma
+COPY --chown=node:node --from=build /app/prisma.config.ts ./prisma.config.ts
+RUN mkdir -p /app/uploads && chown node:node /app/uploads
 USER node
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && (node dist/main.js || node dist/src/main.js)"]
