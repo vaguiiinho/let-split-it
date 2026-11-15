@@ -13,6 +13,7 @@ ENV NODE_ENV=production PORT=3001
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma/schema.prisma ./prisma/schema.prisma
+COPY --from=build /app/healthcheck.js ./healthcheck.js
 USER node
 EXPOSE 3001
 CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db push && (node dist/main.js || node dist/src/main.js)"]
