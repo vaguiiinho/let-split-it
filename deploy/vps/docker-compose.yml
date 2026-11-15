@@ -28,7 +28,7 @@ services:
 
   api:
     # APP_VERSION é gravada no .env pelo deploy.sh a cada deploy.
-    image: vaguiiinho/split-api:${APP_VERSION:?defina APP_VERSION no .env}
+    image: vaguiiinho/let-split-it-api:${APP_VERSION:?defina APP_VERSION no .env}
     container_name: split-api
     restart: unless-stopped
     depends_on:
@@ -55,7 +55,7 @@ services:
           - split-api
 
   web:
-    image: vaguiiinho/split-web:${APP_VERSION:?defina APP_VERSION no .env}
+    image: vaguiiinho/let-split-it-web:${APP_VERSION:?defina APP_VERSION no .env}
     container_name: split-web
     restart: unless-stopped
     depends_on:

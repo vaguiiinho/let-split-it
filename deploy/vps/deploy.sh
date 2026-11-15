@@ -73,5 +73,6 @@ docker images --format '{{.Repository}}:{{.Tag}}' \
   | grep -E '^vaguiiinho/let-split-it-(api|web):' \
   | grep -vE ":(${VERSION//./\\.}|latest)$" \
   | xargs -r docker rmi >/dev/null 2>&1 || true
-docker compose -f /root/projects/infra docker-compose.yml restart nginx
+docker compose -f /root/projects/infra/docker-compose.yml restart nginx \
+  || echo "AVISO: não foi possível reiniciar o nginx (/root/projects/infra/docker-compose.yml)" >&2
 log "Deploy ${VERSION} concluído"
