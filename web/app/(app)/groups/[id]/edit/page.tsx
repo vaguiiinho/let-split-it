@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EditGroupForm } from '@/features/groups/EditGroupForm';
 import { ActionButton } from '@/features/ui/ActionButton';
 import { SectionTitle } from '@/features/ui/SectionTitle';
-import { groupTitle, loadGroupOr404 } from '@/lib/queries';
+import { canManageGroup, getMe, groupTitle, loadGroupOr404 } from '@/lib/queries';
 import { deleteGroupAction, updateGroupAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditGroupPage({ params }: Props) {
   const { id } = await params;
-  const group = await loadGroupOr404(id);
+  const [group, me] = await Promise.all([loadGroupOr404(id), getMe()]);
+
+  // R2: só dono ou admin renomeia/exclui. A API continua sendo a fonte de verdade (403 vira mensagem no form).
+  if (!canManageGroup(me, group)) {
+    return (
+      <section aria-labelledby="editar" className="card">
+        <SectionTitle id="editar" emoji="🔒">
+          Editar rolê
+        </SectionTitle>
+        <p>
+          Só quem criou o rolê (ou um administrador) pode renomear ou excluir. Você ainda pode adicionar despesas, registrar
+          pagamentos e convidar a galera.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-6">

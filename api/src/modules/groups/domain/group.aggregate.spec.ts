@@ -132,6 +132,8 @@ describe('Group aggregate', () => {
         id: g.id,
         name: g.name,
         createdAt: g.createdAt,
+        ownerId: null,
+        ownerPersonId: null,
         members: [...g.members],
         expenses: [...g.expenses],
         payments: [...g.payments],

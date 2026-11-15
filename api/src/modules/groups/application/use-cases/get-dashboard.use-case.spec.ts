@@ -3,7 +3,7 @@ import { AmountCents } from '../../domain/value-objects/amount-cents.vo';
 import { ExpenseDescription } from '../../domain/value-objects/expense-description.vo';
 import { GroupName } from '../../domain/value-objects/group-name.vo';
 import { Weight } from '../../domain/value-objects/weight.vo';
-import { makePeopleRepo, makePerson, makeRepo } from '../../testing/fixtures';
+import { makePeopleRepo, makePerson, makeRepo, ADMIN } from '../../testing/fixtures';
 import { GetDashboardUseCase } from './get-dashboard.use-case';
 
 const clock = { now: () => new Date('2026-11-10T12:00:00-03:00') };
@@ -34,7 +34,7 @@ async function build() {
 describe('GetDashboardUseCase', () => {
   it('banco vazio: zeros, listas vazias e 6 meses', async () => {
     const { uc } = await build();
-    const out = await uc.execute({});
+    const out = await uc.execute({ actor: ADMIN });
     expect(out.totals).toMatchObject({ spentCents: 0, settledCents: 0, pendingCents: 0, groupCount: 0, expenseCount: 0 });
     expect(out.totals.peopleCount).toBe(3);
     expect(out.groupsByStatus).toEqual({ settled: 0, pending: 0, empty: 0 });
@@ -55,7 +55,7 @@ describe('GetDashboardUseCase', () => {
     await repo.save(g);
     await repo.save(newGroup('Vazio').g);
 
-    const out = await uc.execute({});
+    const out = await uc.execute({ actor: ADMIN });
     expect(out.totals).toMatchObject({
       spentCents: 12000,
       settledCents: 1500,
@@ -76,14 +76,14 @@ describe('GetDashboardUseCase', () => {
     const { g, ana, add } = newGroup('Quitado');
     add(300, ana, '2026-07-01T02:00:00Z');
     await repo.save(g);
-    expect((await uc.execute({})).byMonth[0]).toEqual({ month: '2026-06', totalCents: 300 });
+    expect((await uc.execute({ actor: ADMIN })).byMonth[0]).toEqual({ month: '2026-06', totalCents: 300 });
 
     for (let i = 0; i < 9; i++) {
       const x = newGroup(`G${i}`);
       x.add(1000 + i, x.ana, '2026-11-02T10:00:00-03:00');
       await repo.save(x.g);
     }
-    const out = await uc.execute({});
+    const out = await uc.execute({ actor: ADMIN });
     expect(out.byGroup).toHaveLength(8);
     expect(out.byGroup[0].totalCents).toBe(1008);
     expect(out.byGroup.every((b) => b.totalCents > 0)).toBe(true);
@@ -102,6 +102,6 @@ describe('GetDashboardUseCase', () => {
     });
     void add;
     await repo.save(g);
-    expect((await uc.execute({})).groupsByStatus).toEqual({ settled: 1, pending: 0, empty: 0 });
+    expect((await uc.execute({ actor: ADMIN })).groupsByStatus).toEqual({ settled: 1, pending: 0, empty: 0 });
   });
 });

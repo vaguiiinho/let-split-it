@@ -4,7 +4,7 @@ import { GroupTabs } from '@/features/groups/GroupTabs';
 import { PageHeader } from '@/features/ui/PageHeader';
 import { plural } from '@/lib/format';
 import { formatBRL } from '@/lib/money';
-import { groupTitle, loadGroupOr404 } from '@/lib/queries';
+import { canManageGroup, getMe, groupTitle, loadGroupOr404 } from '@/lib/queries';
 
 type Props = { params: Promise<{ id: string }>; children: React.ReactNode };
 
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
 /** Cabeçalho do rolê + abas. Compartilha o GET do rolê com as páginas via React.cache. */
 export default async function GroupLayout({ params, children }: Props) {
   const { id } = await params;
-  const group = await loadGroupOr404(id);
+  const [group, me] = await Promise.all([loadGroupOr404(id), getMe()]);
 
   return (
     <div className="space-y-6">
@@ -29,9 +29,11 @@ export default async function GroupLayout({ params, children }: Props) {
           </>
         }
         actions={
-          <Link href={`/groups/${group.id}/edit`} className="btn btn-ghost text-sm">
-            ✏️ Editar
-          </Link>
+          canManageGroup(me, group) ? (
+            <Link href={`/groups/${group.id}/edit`} className="btn btn-ghost text-sm">
+              ✏️ Editar
+            </Link>
+          ) : undefined
         }
       />
       <GroupTabs groupId={group.id} />

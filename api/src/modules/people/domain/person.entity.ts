@@ -5,6 +5,8 @@ import { PixKey } from './value-objects/pix-key.vo';
 export interface PersonProps {
   name: PersonName;
   pixKey: PixKey | null;
+  /** Usuário que criou a pessoa (null: antiga ou vinculada a usuário). */
+  createdById?: UniqueEntityId | null;
 }
 
 /** Pessoa global: pode participar de vários rolês. */
@@ -14,14 +16,15 @@ export class Person {
     private _name: PersonName,
     private _pixKey: PixKey | null,
     readonly createdAt: Date,
+    readonly createdById: UniqueEntityId | null = null,
   ) {}
 
   static create(props: PersonProps, createdAt: Date, id?: UniqueEntityId): Person {
-    return new Person(id ?? UniqueEntityId.create(), props.name, props.pixKey, createdAt);
+    return new Person(id ?? UniqueEntityId.create(), props.name, props.pixKey, createdAt, props.createdById ?? null);
   }
 
   static restore(props: PersonProps & { id: UniqueEntityId; createdAt: Date }): Person {
-    return new Person(props.id, props.name, props.pixKey, props.createdAt);
+    return new Person(props.id, props.name, props.pixKey, props.createdAt, props.createdById ?? null);
   }
 
   get name(): PersonName {

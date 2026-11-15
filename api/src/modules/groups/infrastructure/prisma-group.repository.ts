@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import type { GroupScope } from '../../../shared/domain/group-scope';
+import { groupVisibleWhere } from '../../../shared/infrastructure/group-visibility';
 import { PrismaService } from '../../../shared/infrastructure/prisma.service';
 import { Group } from '../domain/group.aggregate';
 import { GroupRepository, GroupSummary } from '../domain/group.repository';
@@ -17,21 +19,27 @@ export class PrismaGroupRepository implements GroupRepository {
     return row ? toDomain(row) : null;
   }
 
-  async findAll(): Promise<Group[]> {
+  async findAll(scope: GroupScope): Promise<Group[]> {
     const rows = await this.prisma.group.findMany({
+      where: groupVisibleWhere(scope),
       orderBy: { createdAt: 'asc' },
       include: groupInclude,
     });
     return rows.map(toDomain);
   }
 
-  async listSummaries(): Promise<GroupSummary[]> {
+  async listSummaries(scope: GroupScope): Promise<GroupSummary[]> {
     const [groups, totals] = await Promise.all([
       this.prisma.group.findMany({
+        where: groupVisibleWhere(scope),
         orderBy: { createdAt: 'desc' },
         include: { _count: { select: { members: true, expenses: true } } },
       }),
-      this.prisma.expense.groupBy({ by: ['groupId'], _sum: { amountCents: true } }),
+      this.prisma.expense.groupBy({
+        by: ['groupId'],
+        where: { group: groupVisibleWhere(scope) },
+        _sum: { amountCents: true },
+      }),
     ]);
     const totalBy = new Map(totals.map((t) => [t.groupId, t._sum.amountCents ?? 0]));
     return groups.map((g) => ({
@@ -42,6 +50,13 @@ export class PrismaGroupRepository implements GroupRepository {
       expenseCount: g._count.expenses,
       totalCents: totalBy.get(g.id) ?? 0,
     }));
+  }
+
+  async countVisiblePeople(scope: GroupScope): Promise<number> {
+    if (scope.kind === 'all') return this.prisma.person.count();
+    return this.prisma.person.count({
+      where: { memberships: { some: { group: groupVisibleWhere(scope) } } },
+    });
   }
 
   /** Persiste o aggregate inteiro (substitui filhos) numa transação. */

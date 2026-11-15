@@ -3,6 +3,7 @@ import { Group } from '../../domain/group.aggregate';
 export type GroupDetailOutput = {
   id: string;
   name: string;
+  ownerId: string | null;
   createdAt: string;
   totalCents: number;
   members: { id: string; name: string; pixKey: string | null }[];
@@ -27,6 +28,7 @@ export function toGroupDetailOutput(group: Group): GroupDetailOutput {
   return {
     id: group.id.value,
     name: group.name.value,
+    ownerId: group.ownerId?.value ?? null,
     createdAt: group.createdAt.toISOString(),
     totalCents: group.totalCents,
     members: group.members.map((m) => ({

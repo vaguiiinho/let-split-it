@@ -10,6 +10,7 @@ export function toDomain(row: PersonRow): Person {
     name: PersonName.create(row.name),
     pixKey: PixKey.createOptional(row.pixKey),
     createdAt: row.createdAt,
+    createdById: row.createdById ? UniqueEntityId.create(row.createdById) : null,
   });
 }
 
@@ -20,5 +21,6 @@ export function toPersistence(person: Person) {
     nameKey: person.name.key,
     pixKey: person.pixKey?.value ?? null,
     createdAt: person.createdAt,
+    createdById: person.createdById?.value ?? null,
   };
 }

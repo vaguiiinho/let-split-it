@@ -3,7 +3,10 @@
 import { FormError } from '@/features/ui/FormError';
 import { useFormAction, type FormAction } from '@/features/ui/useFormAction';
 
-/** Adiciona ao rolê uma pessoa já cadastrada. `people` já vem sem quem está no rolê. */
+/**
+ * Adiciona ao rolê uma pessoa já cadastrada. `people` já vem sem quem está no rolê e sem quem tem
+ * conta (essas entram por convite, spec 004 R7).
+ */
 export function AddExistingMemberForm({
   action,
   groupId,
@@ -20,7 +23,7 @@ export function AddExistingMemberForm({
       <div>
         <h3 className="mb-1 font-extrabold">Adicionar pessoa cadastrada</h3>
         <p className="rounded-xl bg-surface-2 p-3 text-sm">
-          Todo mundo que está em Pessoas já está neste rolê.{' '}
+          Todas as pessoas sem conta já estão neste rolê (quem tem conta entra por convite, acima).{' '}
           <a href="#nova-pessoa" className="font-bold text-link underline underline-offset-2">
             Crie uma pessoa nova
           </a>{' '}
@@ -32,9 +35,10 @@ export function AddExistingMemberForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate aria-labelledby="add-existing-title">
-      <h3 id="add-existing-title" className="mb-3 font-extrabold">
+      <h3 id="add-existing-title" className="mb-1 font-extrabold">
         Adicionar pessoa cadastrada
       </h3>
+      <p className="mb-3 text-sm">Só aparece quem não tem conta no Racha Aí. Quem tem conta, convide acima.</p>
       <input type="hidden" name="groupId" value={groupId} />
       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>

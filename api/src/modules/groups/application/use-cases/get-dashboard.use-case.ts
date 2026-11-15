@@ -1,9 +1,11 @@
+import type { Actor } from '../../../../shared/domain/actor';
 import { Clock } from '../../../../shared/domain/clock.port';
 import { PersonRepository } from '../../../people/domain/person.repository';
 import { GroupRepository } from '../../domain/group.repository';
+import { scopeFor } from '../group-access.policy';
 import { DashboardOutput } from '../dto/dashboard.output';
 
-export type GetDashboardInput = Record<string, never>;
+export type GetDashboardInput = { actor: Actor };
 export type GetDashboardOutput = DashboardOutput;
 
 const TZ = 'America/Sao_Paulo';
@@ -23,8 +25,12 @@ export class GetDashboardUseCase {
     private readonly clock: Clock,
   ) {}
 
-  async execute(_input: GetDashboardInput): Promise<GetDashboardOutput> {
-    const [groups, peopleCount] = await Promise.all([this.groups.findAll(), this.people.count()]);
+  async execute(input: GetDashboardInput): Promise<GetDashboardOutput> {
+    const scope = scopeFor(input.actor);
+    const [groups, peopleCount] = await Promise.all([
+      this.groups.findAll(scope),
+      scope.kind === 'all' ? this.people.count() : this.groups.countVisiblePeople(scope),
+    ]);
 
     let spentCents = 0;
     let settledCents = 0;

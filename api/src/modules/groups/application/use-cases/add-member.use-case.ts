@@ -1,3 +1,4 @@
+import type { Actor } from '../../../../shared/domain/actor';
 import { Clock } from '../../../../shared/domain/clock.port';
 import { ConflictError, NotFoundError, ValidationError } from '../../../../shared/domain/errors';
 import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
@@ -5,11 +6,13 @@ import { Person } from '../../../people/domain/person.entity';
 import { PersonRepository } from '../../../people/domain/person.repository';
 import { PersonName } from '../../../people/domain/value-objects/person-name.vo';
 import { PixKey } from '../../../people/domain/value-objects/pix-key.vo';
+import { UserRepository } from '../../../users/domain/user.repository';
 import { GroupRepository } from '../../domain/group.repository';
 import { GroupDetailOutput, toGroupDetailOutput } from '../dto/group-detail.output';
-import { findGroupOrFail } from '../find-group-or-fail';
+import { findAccessibleGroupOrFail } from '../group-access.policy';
 
 export type AddMemberInput = {
+  actor: Actor;
   groupId: string;
   personId?: string;
   name?: string;
@@ -23,15 +26,17 @@ export class AddMemberUseCase {
   constructor(
     private readonly repo: GroupRepository,
     private readonly people: PersonRepository,
+    private readonly users: UserRepository,
     private readonly clock: Clock,
   ) {}
 
   async execute(input: AddMemberInput): Promise<AddMemberOutput> {
     const groupId = UniqueEntityId.create(input.groupId);
     const target = this.parseTarget(input);
-    const group = await findGroupOrFail(this.repo, groupId);
-    const { person, created } = await this.resolvePerson(target);
+    const group = await findAccessibleGroupOrFail(this.repo, groupId, input.actor);
+    const { person, created } = await this.resolvePerson(target, input.actor);
     try {
+      await this.assertNoAccountOrAdmin(person, input.actor);
       group.addMember(person);
       await this.repo.save(group);
     } catch (e) {
@@ -57,7 +62,10 @@ export class AddMemberUseCase {
     return { name: PersonName.create(input.name), pixKey: PixKey.createOptional(input.pixKey) };
   }
 
-  private async resolvePerson(target: Target): Promise<{ person: Person; created: boolean }> {
+  private async resolvePerson(
+    target: Target,
+    actor: Actor,
+  ): Promise<{ person: Person; created: boolean }> {
     if ('personId' in target) {
       const person = await this.people.findById(target.personId);
       if (!person) throw new NotFoundError('Pessoa não encontrada');
@@ -73,10 +81,22 @@ export class AddMemberUseCase {
       return { person: existing, created: false };
     }
     const person = Person.create(
-      { name: target.name, pixKey: target.pixKey },
+      {
+        name: target.name,
+        pixKey: target.pixKey,
+        createdById: UniqueEntityId.create(actor.userId),
+      },
       this.clock.now(),
     );
     await this.people.save(person);
     return { person, created: true };
+  }
+
+  /** R7: quem tem conta entra por convite; só o ADMIN adiciona direto. */
+  private async assertNoAccountOrAdmin(person: Person, actor: Actor): Promise<void> {
+    if (actor.role === 'ADMIN') return;
+    if (await this.users.findByPersonId(person.id)) {
+      throw new ConflictError(`${person.name.value} tem conta no Racha Aí: envie um convite`);
+    }
   }
 }

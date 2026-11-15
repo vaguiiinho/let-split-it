@@ -13,6 +13,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "db:reset": "node scripts/ensure-env.js && prisma generate && prisma db push --force-reset",
+    "db:seed": "node scripts/ensure-env.js && nest build && node dist/seed.js",
+    "demo:purge": "node scripts/ensure-env.js && nest build && node dist/purge-demo.js",
     "db:setup": "node scripts/ensure-env.js && prisma generate && prisma db push"
   },
   "dependencies": {

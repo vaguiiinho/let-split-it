@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { FakeClock, makeRepo, seedGroup } from '../../testing/fixtures';
+import { FakeClock, makeRepo, seedGroup, ADMIN } from '../../testing/fixtures';
 import { AddExpenseInput, AddExpenseUseCase } from './add-expense.use-case';
 
 describe('AddExpenseUseCase', () => {
@@ -7,6 +7,7 @@ describe('AddExpenseUseCase', () => {
     const repo = makeRepo();
     const s = await seedGroup(repo, false);
     const base: AddExpenseInput = {
+      actor: ADMIN,
       groupId: s.gid,
       description: 'Pizza',
       amountCents: 1000,

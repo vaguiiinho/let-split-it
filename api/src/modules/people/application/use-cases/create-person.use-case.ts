@@ -1,3 +1,5 @@
+import type { Actor } from '../../../../shared/domain/actor';
+import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
 import { Clock } from '../../../../shared/domain/clock.port';
 import { ConflictError } from '../../../../shared/domain/errors';
 import { Person } from '../../domain/person.entity';
@@ -6,7 +8,7 @@ import { PersonName } from '../../domain/value-objects/person-name.vo';
 import { PixKey } from '../../domain/value-objects/pix-key.vo';
 import { PersonOutput, toPersonOutput } from '../dto/person.output';
 
-export type CreatePersonInput = { name: string; pixKey?: string | null };
+export type CreatePersonInput = { name: string; pixKey?: string | null; actor?: Actor };
 export type CreatePersonOutput = PersonOutput;
 
 export class CreatePersonUseCase {
@@ -21,8 +23,15 @@ export class CreatePersonUseCase {
     if (await this.repo.findByNameKey(name.key)) {
       throw new ConflictError(`Já existe uma pessoa chamada "${name.value}"`);
     }
-    const person = Person.create({ name, pixKey }, this.clock.now());
+    const person = Person.create(
+      {
+        name,
+        pixKey,
+        createdById: input.actor ? UniqueEntityId.create(input.actor.userId) : null,
+      },
+      this.clock.now(),
+    );
     await this.repo.save(person);
-    return toPersonOutput(person);
+    return toPersonOutput(person, false);
   }
 }

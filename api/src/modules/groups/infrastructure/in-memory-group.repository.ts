@@ -1,4 +1,5 @@
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import type { GroupScope } from '../../../shared/domain/group-scope';
 import { Group } from '../domain/group.aggregate';
 import { GroupRepository, GroupSummary } from '../domain/group.repository';
 
@@ -9,12 +10,26 @@ export class InMemoryGroupRepository implements GroupRepository {
     return this.items.get(id.value) ?? null;
   }
 
-  async findAll(): Promise<Group[]> {
-    return [...this.items.values()];
+  /** Equivalente a GroupAccessPolicy.canView (R1) / groupVisibleWhere. */
+  private visible(scope: GroupScope): Group[] {
+    return [...this.items.values()].filter(
+      (g) =>
+        scope.kind === 'all' ||
+        g.ownerId?.value === scope.userId ||
+        g.members.some((m) => m.id.value === scope.personId),
+    );
   }
 
-  async listSummaries(): Promise<GroupSummary[]> {
-    return [...this.items.values()].map((g) => ({
+  async findAll(scope: GroupScope = { kind: 'all' }): Promise<Group[]> {
+    return this.visible(scope);
+  }
+
+  async countVisiblePeople(scope: GroupScope = { kind: 'all' }): Promise<number> {
+    return new Set(this.visible(scope).flatMap((g) => g.members.map((m) => m.id.value))).size;
+  }
+
+  async listSummaries(scope: GroupScope = { kind: 'all' }): Promise<GroupSummary[]> {
+    return this.visible(scope).map((g) => ({
       id: g.id.value,
       name: g.name.value,
       createdAt: g.createdAt,

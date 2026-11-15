@@ -18,6 +18,7 @@ export const groupInclude = {
     include: { participants: { orderBy: { position: 'asc' } } },
   },
   payments: { orderBy: { position: 'asc' } },
+  owner: { select: { personId: true } },
 } satisfies Prisma.GroupInclude;
 
 export type GroupRow = Prisma.GroupGetPayload<{ include: typeof groupInclude }>;
@@ -28,6 +29,8 @@ export function toDomain(row: GroupRow): Group {
     id: UniqueEntityId.create(row.id),
     name: GroupName.create(row.name),
     createdAt: row.createdAt,
+    ownerId: row.ownerId ? UniqueEntityId.create(row.ownerId) : null,
+    ownerPersonId: row.owner ? UniqueEntityId.create(row.owner.personId) : null,
     members: row.members.map((m) =>
       Member.restore({
         id: UniqueEntityId.create(m.personId),
@@ -64,7 +67,12 @@ export function toDomain(row: GroupRow): Group {
 export function toPersistence(group: Group) {
   const groupId = group.id.value;
   return {
-    group: { id: groupId, name: group.name.value, createdAt: group.createdAt },
+    group: {
+      id: groupId,
+      name: group.name.value,
+      createdAt: group.createdAt,
+      ownerId: group.ownerId?.value ?? null,
+    },
     members: group.members.map((m, position) => ({
       groupId,
       personId: m.id.value,
