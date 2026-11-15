@@ -1,0 +1,88 @@
+# Compose de produção da VPS (nginx compartilhado na rede externa `projects-deploy-proxy`).
+# Enviado pelo CD (.github/workflows/deploy.yml) e aplicado por deploy.sh; o .env fica SÓ na VPS (segredos).
+#
+# NÃO mude os nomes abaixo: `name: split`, o volume `split-postgres-data` e as redes. Trocar o nome do volume
+# faria o Postgres subir com um banco VAZIO (o antigo continua no disco, mas desconectado).
+# Nunca rode `docker compose down -v`: o `-v` apaga o volume do banco.
+name: split
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: split-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - split_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - split_private
+
+  api:
+    # APP_VERSION é gravada no .env pelo deploy.sh a cada deploy.
+    image: vaguiiinho/split-api:${APP_VERSION:?defina APP_VERSION no .env}
+    container_name: split-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Todas as variáveis do .env chegam à API (SESSION_TOKEN_SECRET, SHOWCASE_ACCOUNT_PASSWORD, ADMIN_*, TRUST_PROXY...).
+    # Variável ausente no .env fica ausente no container (a API usa o padrão dela).
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${APP_NODE_ENV:-production}
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # migrations + seed rodam antes do servidor subir
+    networks:
+      split_private: {}
+      proxy:
+        aliases:
+          - split-api
+
+  web:
+    image: vaguiiinho/split-web:${APP_VERSION:?defina APP_VERSION no .env}
+    container_name: split-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_URL: http://split-api:3001
+      DEMO_ACCOUNT_HINT: ${DEMO_ACCOUNT_HINT:-off}
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      proxy:
+        aliases:
+          - split-web
+
+networks:
+  split_private:
+    name: split-private
+  proxy:
+    external: true
+    name: projects-deploy-proxy
+
+volumes:
+  split_postgres_data:
+    name: split-postgres-data

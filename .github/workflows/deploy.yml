@@ -44,3 +44,59 @@ jobs:
           tags: |
             ${{ env.WEB_IMAGE }}:${{ env.VERSION }}
             ${{ env.WEB_IMAGE }}:latest
+
+ # ==========================================
+  # CD: deploy na VPS por SSH
+  # ==========================================
+  # Segredos (Settings > Secrets and variables > Actions > Secrets):
+  #   VPS_HOST         IP ou domínio da VPS
+  #   VPS_USER         usuário SSH (precisa rodar docker)
+  #   VPS_SSH_KEY      chave PRIVADA de deploy (a pública vai no ~/.ssh/authorized_keys da VPS)
+  #   VPS_KNOWN_HOSTS  saída de `ssh-keyscan -p <porta> <host>` (fixa a identidade da VPS; nada de StrictHostKeyChecking=no)
+  # Variáveis (aba Variables): DEPLOY_ENABLED=true liga este job (deixe desligado até cadastrar os segredos);
+  # opcionais: VPS_PORT (padrão 22), VPS_PATH (padrão /root/projects/finance).
+  deploy:
+    needs: build-and-push
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.build-and-push.outputs.version }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+      VPS_PATH: ${{ vars.VPS_PATH || '/root/projects/finance' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: deploy/vps
+
+      - name: Configurar SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName $VPS_HOST
+            User $VPS_USER
+            Port $VPS_PORT
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+
+      # O compose vai como .new: o deploy.sh valida antes de substituir (e guarda o anterior em .bak).
+      - name: Enviar compose e script
+        run: |
+          ssh vps "mkdir -p '$VPS_PATH'"
+          scp deploy/vps/docker-compose.yml "vps:$VPS_PATH/docker-compose.yml.new"
+          scp deploy/vps/deploy.sh "vps:$VPS_PATH/deploy.sh"
+
+      - name: Deploy ${{ env.VERSION }}
+        run: ssh vps "bash '$VPS_PATH/deploy.sh' '$VERSION'"            
