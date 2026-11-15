@@ -17,7 +17,7 @@ log() { printf '\n==> %s\n' "$*"; }
 
 # --- 1. validações -----------------------------------------------------------------------------------------------
 [ -f .env ] || { echo ".env não encontrado em $(pwd)" >&2; exit 1; }
-for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB SESSION_TOKEN_SECRET; do
+for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB; do
   grep -qE "^${var}=.+" .env || { echo "Falta ${var} no .env" >&2; exit 1; }
 done
 

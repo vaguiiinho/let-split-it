@@ -34,7 +34,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Todas as variáveis do .env chegam à API (SESSION_TOKEN_SECRET, SHOWCASE_ACCOUNT_PASSWORD, ADMIN_*, TRUST_PROXY...).
+    # Todas as variáveis do .env chegam à API (SHOWCASE_ACCOUNT_PASSWORD, ADMIN_*, TRUST_PROXY...).
     # Variável ausente no .env fica ausente no container (a API usa o padrão dela).
     env_file:
       - .env
