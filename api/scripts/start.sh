@@ -1,24 +1,29 @@
 #!/bin/sh
 # Entrypoint da imagem de produção: aplica as migrations e sobe a API.
 #
-# Baseline automático (só acontece uma vez): bancos criados antes via `prisma db push` não têm a tabela
-# _prisma_migrations, e o `migrate deploy` recusa com P3005 ("database schema is not empty"). Nesse caso a
-# primeira migration (que é o schema que o db push criou) é marcada como aplicada e o deploy roda de novo,
-# aplicando só as migrations posteriores.
+# Baseline automático: bancos criados via `prisma db push` já têm as tabelas, mas não têm a primeira migration
+# registrada como aplicada. O `migrate deploy` então falha de um destes jeitos:
+#   P3005  schema não vazio e sem tabela _prisma_migrations;
+#   P3018  tentou aplicar a primeira migration e a tabela já existia (42P07);
+#   P3009  a tentativa acima ficou registrada como "failed" (restarts seguintes).
+# Se (e só se) a migration envolvida for a PRIMEIRA (baseline = o schema que o db push criou), ela é marcada
+# como aplicada e o deploy roda de novo. Qualquer outra falha derruba o container, como deve ser.
 set -eu
 
-if ! out=$(npx prisma migrate deploy 2>&1); then
+baseline=$(ls -1 prisma/migrations | grep -E '^[0-9]+_' | sort | head -n 1)
+
+if out=$(npx prisma migrate deploy 2>&1); then
   echo "$out"
-  if echo "$out" | grep -q 'P3005'; then
-    baseline=$(ls -1 prisma/migrations | grep -E '^[0-9]+_' | sort | head -n 1)
-    echo "Banco sem histórico de migrations: baseline em ${baseline}"
+else
+  echo "$out"
+  if echo "$out" | grep -q 'P3005' \
+    || { echo "$out" | grep -qE 'P3018|P3009' && echo "$out" | grep -qF "$baseline"; }; then
+    echo "Banco criado sem migrations: baseline em ${baseline}"
     npx prisma migrate resolve --applied "$baseline"
     npx prisma migrate deploy
   else
     exit 1
   fi
-else
-  echo "$out"
 fi
 
 exec node dist/main.js
