@@ -4,6 +4,7 @@ import { Person } from '../../people/domain/person.entity';
 import { PersonName } from '../../people/domain/value-objects/person-name.vo';
 import { PixKey } from '../../people/domain/value-objects/pix-key.vo';
 import { InMemoryPersonRepository } from '../../people/infrastructure/in-memory-person.repository';
+import { makeActor } from '../../users/testing/fixtures';
 import { Group } from '../domain/group.aggregate';
 import { AmountCents } from '../domain/value-objects/amount-cents.vo';
 import { ExpenseDescription } from '../domain/value-objects/expense-description.vo';
@@ -61,3 +62,8 @@ export async function seedGroup(
   await repo.save(group);
   return { group, ana, bia, cadu, persons, gid: group.id.value };
 }
+
+/** Ator ADMIN para os testes de use case que não exercitam autorização. */
+export const ADMIN = makeActor({ role: 'ADMIN' });
+export { InMemoryGroupRepository } from '../infrastructure/in-memory-group.repository';
+export { InMemoryGroupInviteRepository } from '../infrastructure/in-memory-group-invite.repository';

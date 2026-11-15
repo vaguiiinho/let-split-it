@@ -3,7 +3,7 @@ import('node:http').then(({ request }) => {
     {
       host: '127.0.0.1',
       port: process.env.PORT || 3000,
-      path: '/',
+      path: '/login',
       timeout: 3000,
     },
     (res) => {

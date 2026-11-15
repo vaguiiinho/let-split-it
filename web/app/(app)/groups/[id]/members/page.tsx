@@ -1,26 +1,47 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { InviteUserSection, type InviteSearch } from '@/features/groups/InviteUserSection';
 import { AddExistingMemberForm } from '@/features/members/AddExistingMemberForm';
 import { AddMemberForm } from '@/features/members/AddMemberForm';
 import { PersonAvatar } from '@/features/people/PersonAvatar';
 import { ActionButton } from '@/features/ui/ActionButton';
 import { SectionTitle } from '@/features/ui/SectionTitle';
-import { groupTitle, listPeople, loadGroupOr404 } from '@/lib/queries';
-import { addExistingMemberAction, addNewMemberAction, removeMemberAction } from '../actions';
+import { api } from '@/lib/api';
+import { groupTitle, listGroupInvites, listPeople, loadGroupOr404 } from '@/lib/queries';
+import { userSearchSchema } from '@/lib/validation';
+import { addExistingMemberAction, addNewMemberAction, inviteUserAction, removeMemberAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** Busca de usuários para convite a partir do `?q=` (U6: 2 a 30 caracteres). */
+async function searchFromQuery(raw: string | string[] | undefined): Promise<InviteSearch> {
+  const q = (Array.isArray(raw) ? raw[0] : raw)?.trim() ?? '';
+  if (!q) return { kind: 'idle' };
+  const parsed = userSearchSchema.safeParse(q);
+  if (!parsed.success) return { kind: 'invalid', q, message: parsed.error.issues[0]?.message ?? 'Busca inválida.' };
+  return { kind: 'results', q: parsed.data, results: await api.searchUsers(parsed.data) };
+}
+
+export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
   return groupTitle((await params).id, 'Pessoas');
 }
 
-export default async function GroupMembersPage({ params }: Props) {
+export default async function GroupMembersPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const [group, people] = await Promise.all([loadGroupOr404(id), listPeople()]);
+  const group = await loadGroupOr404(id);
+  const [people, invites, search] = await Promise.all([
+    listPeople(),
+    listGroupInvites(group.id),
+    searchFromQuery((await searchParams).q),
+  ]);
   const memberIds = new Set(group.members.map((m) => m.id));
-  const available = people.filter((p) => !memberIds.has(p.id));
+  // Quem tem conta só entra por convite (R7): fica fora do "adicionar existente".
+  const available = people.filter((p) => !memberIds.has(p.id) && !p.hasAccount);
   const involved = new Set([
     ...group.expenses.flatMap((e) => [e.payerId, ...e.participants.map((p) => p.memberId)]),
     ...group.payments.flatMap((p) => [p.fromId, p.toId]),
@@ -70,7 +91,9 @@ export default async function GroupMembersPage({ params }: Props) {
         )}
       </section>
 
-      <section aria-label="Adicionar pessoas" className="card space-y-6">
+      <InviteUserSection groupId={group.id} search={search} pending={invites} inviteAction={inviteUserAction} />
+
+      <section aria-label="Adicionar pessoas sem conta" className="card space-y-6">
         <AddExistingMemberForm action={addExistingMemberAction} groupId={group.id} people={available} />
         <div id="nova-pessoa" className="border-t-2 border-line pt-6">
           <AddMemberForm action={addNewMemberAction} groupId={group.id} />

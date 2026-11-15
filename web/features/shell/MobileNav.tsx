@@ -2,13 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { SidebarNav } from './SidebarNav';
+import { SidebarNav, type NavUser } from './SidebarNav';
 
 /**
  * Drawer de navegação (< md) num <dialog> modal: o navegador cuida do foco preso e do Esc.
  * Fecha também no clique fora (backdrop) e quando a rota muda; o foco volta ao botão "Menu".
  */
-export function MobileNav() {
+export function MobileNav({ user }: { user: NavUser }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -68,7 +68,7 @@ export function MobileNav() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <SidebarNav label="Principal (menu)" onNavigate={close} />
+          <SidebarNav label="Principal (menu)" user={user} onNavigate={close} />
         </div>
       </dialog>
     </>

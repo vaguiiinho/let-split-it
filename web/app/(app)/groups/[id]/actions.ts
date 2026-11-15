@@ -11,6 +11,7 @@ import {
   addExistingMemberSchema,
   firstIssue,
   idSchema,
+  inviteSchema,
   newMemberSchema,
   str,
   updateGroupSchema,
@@ -46,6 +47,14 @@ export async function addNewMemberAction(_prev: Prev, fd: FormData): Promise<Act
   if (!parsed.success) return firstIssue(parsed.error);
   const { groupId, name, pixKey } = parsed.data;
   return run(() => api.addMember(groupId, pixKey ? { name, pixKey } : { name }));
+}
+
+/** Convida um usuário com conta (C1–C2). Erros 404/409 da API aparecem ao lado do botão. */
+export async function inviteUserAction(_prev: Prev, fd: FormData): Promise<ActionResult> {
+  const parsed = inviteSchema.safeParse({ groupId: str(fd, 'groupId'), userId: str(fd, 'userId') });
+  if (!parsed.success) return firstIssue(parsed.error);
+  const { groupId, userId } = parsed.data;
+  return run(() => api.inviteUser(groupId, { userId }));
 }
 
 export async function updateGroupAction(_prev: Prev, fd: FormData): Promise<ActionResult> {

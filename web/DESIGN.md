@@ -85,3 +85,22 @@ ou `pos`/`neg` — cor sempre acompanhada do rótulo), `ActionButton`, `FormErro
 - Erros de formulário em `role="alert"`; o que foi digitado é preservado em caso de erro.
 - QR Code em `<details>` (gerado só ao abrir), fundo branco fixo para leitura.
 - Fonte: pilha do sistema arredondada (`ui-rounded`, Nunito…) — sem download no build.
+
+## Autenticação e convites (spec 004)
+- `/login` fica **fora** do shell (`app/login`): `main` centralizado, logo sem link, um `card` com o form
+  (`autoComplete` username/current-password, botão "Entrando…", erro em `FormError`). `?expired=1` mostra um aviso
+  `role="status"` com borda `accent` (não é erro). `DEMO_ACCOUNT_HINT=on` adiciona um segundo cartão com as contas demo.
+- Navbar: nome + `@username` (≥ md), badge "admin" (`accent`, texto escuro) e botão **Sair** (`btn-ghost`). Em telas
+  < sm o CTA "Novo rolê" some da navbar para caber o Sair (continua em `/groups#novo`).
+- Menu: "Convites" com badge redondo `accent` (`aria-label` "Convites, N pendentes"); "Usuários" só para ADMIN
+  (`visibleNavItems`).
+- `/convites`: um cartão por convite (avatar de quem chamou, nome do rolê em h2, data) com Aceitar (`btn-primary`,
+  leva ao rolê) e Recusar (`btn-ghost`, com confirmação). Vazio: 📭.
+- Pessoas do rolê: seção "Convidar usuário" antes de "Adicionar pessoas sem conta". A busca é um `form method="get"`
+  (`?q=`, funciona sem JS); resultados com "+ Convidar" ou "⏳ convite pendente"; lista "Aguardando resposta".
+  O select de pessoas cadastradas omite quem tem conta.
+- Editar rolê: quem não é dono/admin não vê o botão "Editar" no cabeçalho e, na URL direta, vê um cartão 🔒
+  explicando quem pode renomear/excluir.
+- `/admin/usuarios`: tabela (rolagem horizontal no celular, `th scope`), badges "admin"/"demo" sempre com texto;
+  form de criar usuário (a senha é limpa em erro, o resto fica) e cartão `border-neg` "Dados de demonstração" com
+  o botão de limpeza (confirmação + contagens em `role="status"` verde).

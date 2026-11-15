@@ -1,11 +1,12 @@
+import type { Actor } from '../../../../shared/domain/actor';
 import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
 import { Clock } from '../../../../shared/domain/clock.port';
 import { GroupRepository } from '../../domain/group.repository';
 import { AmountCents } from '../../domain/value-objects/amount-cents.vo';
 import { GroupDetailOutput, toGroupDetailOutput } from '../dto/group-detail.output';
-import { findGroupOrFail } from '../find-group-or-fail';
+import { findAccessibleGroupOrFail } from '../group-access.policy';
 
-export type RegisterPaymentInput = {
+export type RegisterPaymentInput = { actor: Actor;
   groupId: string;
   fromId: string;
   toId: string;
@@ -24,7 +25,7 @@ export class RegisterPaymentUseCase {
     const fromId = UniqueEntityId.create(input.fromId);
     const toId = UniqueEntityId.create(input.toId);
     const amount = AmountCents.create(input.amountCents);
-    const group = await findGroupOrFail(this.repo, groupId);
+    const group = await findAccessibleGroupOrFail(this.repo, groupId, input.actor);
     group.registerPayment(fromId, toId, amount, this.clock.now());
     await this.repo.save(group);
     return toGroupDetailOutput(group);

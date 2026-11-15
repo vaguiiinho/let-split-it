@@ -12,6 +12,14 @@ export const getGroup = cache((id: string) => api.getGroup(id));
 export const getSettlement = cache((id: string) => api.getSettlement(id));
 export const getPerson = cache((id: string) => api.getPerson(id));
 export const listPeople = cache(() => api.listPeople());
+/** Usuário logado (+ `pendingInviteCount`). Shell, páginas e checagens de papel dividem o mesmo GET. */
+export const getMe = cache(() => api.me());
+export const listGroupInvites = cache((groupId: string) => api.listGroupInvites(groupId));
+
+/** Pode renomear/excluir o rolê (R2): dono ou admin. A API continua sendo a fonte de verdade (403). */
+export function canManageGroup(me: { id: string; role: string }, group: { ownerId: string | null }): boolean {
+  return me.role === 'ADMIN' || (group.ownerId !== null && group.ownerId === me.id);
+}
 
 /** 400 (id inválido) e 404 viram a página not-found; o resto sobe para o error boundary. */
 async function or404<T>(promise: Promise<T>): Promise<T> {

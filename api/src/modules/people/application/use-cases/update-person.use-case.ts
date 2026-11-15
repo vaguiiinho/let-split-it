@@ -1,11 +1,12 @@
-import { ConflictError, NotFoundError, ValidationError } from '../../../../shared/domain/errors';
+import type { Actor } from '../../../../shared/domain/actor';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../../../shared/domain/errors';
 import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
 import { PersonRepository } from '../../domain/person.repository';
 import { PersonName } from '../../domain/value-objects/person-name.vo';
 import { PixKey } from '../../domain/value-objects/pix-key.vo';
 import { PersonOutput, toPersonOutput } from '../dto/person.output';
 
-export type UpdatePersonInput = { personId: string; name?: string; pixKey?: string | null };
+export type UpdatePersonInput = { personId: string; name?: string; pixKey?: string | null; actor: Actor };
 export type UpdatePersonOutput = PersonOutput;
 
 export class UpdatePersonUseCase {
@@ -20,6 +21,11 @@ export class UpdatePersonUseCase {
     const pixKey = input.pixKey === undefined ? undefined : PixKey.createOptional(input.pixKey);
     const person = await this.repo.findById(id);
     if (!person) throw new NotFoundError('Pessoa não encontrada');
+    // P10: a Person de uma conta (nome/PIX que recebem pagamentos) só é editada pelo próprio usuário ou por ADMIN.
+    const linked = await this.repo.isLinkedToUser(person.id);
+    if (linked && input.actor.role !== 'ADMIN' && input.actor.personId !== person.id.value) {
+      throw new ForbiddenError('Só o próprio usuário ou um admin pode editar esta pessoa');
+    }
     if (name) {
       if (name.key !== person.name.key) {
         const other = await this.repo.findByNameKey(name.key);
@@ -31,6 +37,6 @@ export class UpdatePersonUseCase {
     }
     if (pixKey !== undefined) person.changePixKey(pixKey);
     await this.repo.save(person);
-    return toPersonOutput(person);
+    return toPersonOutput(person, linked);
   }
 }

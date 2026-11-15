@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ConflictError } from '../../../shared/domain/errors';
 import { UniqueEntityId } from '../../../shared/domain/value-objects/unique-entity-id.vo';
+import type { GroupScope } from '../../../shared/domain/group-scope';
+import { groupVisibleWhere } from '../../../shared/infrastructure/group-visibility';
 import { PrismaService } from '../../../shared/infrastructure/prisma.service';
 import { Person } from '../domain/person.entity';
 import { PersonDetail, PersonRepository, PersonSummary } from '../domain/person.repository';
@@ -54,18 +56,31 @@ export class PrismaPersonRepository implements PersonRepository {
     return this.prisma.person.count();
   }
 
-  async listSummaries(): Promise<PersonSummary[]> {
-    const rows = await this.prisma.person.findMany({
-      include: { _count: { select: { memberships: true } } },
-    });
-    return rows.map((r) => ({ person: toDomain(r), groupCount: r._count.memberships }));
+  async isLinkedToUser(id: UniqueEntityId): Promise<boolean> {
+    return (await this.prisma.user.count({ where: { personId: id.value } })) > 0;
   }
 
-  async getDetail(id: UniqueEntityId): Promise<PersonDetail | null> {
+  async listSummaries(scope: GroupScope): Promise<PersonSummary[]> {
+    const rows = await this.prisma.person.findMany({
+      include: {
+        user: { select: { id: true } },
+        _count: { select: { memberships: { where: { group: groupVisibleWhere(scope) } } } },
+      },
+    });
+    return rows.map((r) => ({
+      person: toDomain(r),
+      groupCount: r._count.memberships,
+      hasAccount: r.user !== null,
+    }));
+  }
+
+  async getDetail(id: UniqueEntityId, scope: GroupScope): Promise<PersonDetail | null> {
     const row = await this.prisma.person.findUnique({
       where: { id: id.value },
       include: {
+        user: { select: { id: true } },
         memberships: {
+          where: { group: groupVisibleWhere(scope) },
           include: {
             group: { include: { _count: { select: { members: true } } } },
           },
@@ -82,6 +97,7 @@ export class PrismaPersonRepository implements PersonRepository {
     const totalBy = new Map(totals.map((t) => [t.groupId, t._sum.amountCents ?? 0]));
     return {
       person: toDomain(row),
+      hasAccount: row.user !== null,
       groups: row.memberships.map((m) => ({
         id: m.group.id,
         name: m.group.name,

@@ -19,6 +19,9 @@ export interface GroupSnapshot {
   id: UniqueEntityId;
   name: GroupName;
   createdAt: Date;
+  ownerId: UniqueEntityId | null;
+  /** Person do dono (o aggregate não conhece o User); usada em R8. */
+  ownerPersonId: UniqueEntityId | null;
   members: Member[];
   expenses: Expense[];
   payments: Payment[];
@@ -38,18 +41,42 @@ export class Group {
     readonly id: UniqueEntityId,
     private _name: GroupName,
     readonly createdAt: Date,
+    readonly ownerId: UniqueEntityId | null,
+    readonly ownerPersonId: UniqueEntityId | null,
     private readonly _members: Member[],
     private readonly _expenses: Expense[],
     private readonly _payments: Payment[],
   ) {}
 
-  static create(props: { name: GroupName }, createdAt: Date, id?: UniqueEntityId): Group {
-    return new Group(id ?? UniqueEntityId.create(), props.name, createdAt, [], [], []);
+  static create(
+    props: { name: GroupName; ownerId?: UniqueEntityId | null; ownerPersonId?: UniqueEntityId | null },
+    createdAt: Date,
+    id?: UniqueEntityId,
+  ): Group {
+    return new Group(
+      id ?? UniqueEntityId.create(),
+      props.name,
+      createdAt,
+      props.ownerId ?? null,
+      props.ownerPersonId ?? null,
+      [],
+      [],
+      [],
+    );
   }
 
   /** Reconstitui a partir da persistência (dados já válidos). */
   static restore(s: GroupSnapshot): Group {
-    return new Group(s.id, s.name, s.createdAt, [...s.members], [...s.expenses], [...s.payments]);
+    return new Group(
+      s.id,
+      s.name,
+      s.createdAt,
+      s.ownerId,
+      s.ownerPersonId,
+      [...s.members],
+      [...s.expenses],
+      [...s.payments],
+    );
   }
 
   get name(): GroupName {
@@ -76,6 +103,10 @@ export class Group {
     return this._expenses.reduce((acc, e) => acc + e.amount.value, 0);
   }
 
+  hasMember(personId: UniqueEntityId): boolean {
+    return this._members.some((m) => m.id.equals(personId));
+  }
+
   private findMember(id: UniqueEntityId): Member | undefined {
     return this._members.find((m) => m.id.equals(id));
   }
@@ -92,6 +123,9 @@ export class Group {
   removeMember(memberId: UniqueEntityId): void {
     const idx = this._members.findIndex((m) => m.id.equals(memberId));
     if (idx < 0) throw new NotFoundError('Pessoa não encontrada neste rolê');
+    if (this.ownerPersonId?.equals(memberId)) {
+      throw new ConflictError('O dono do rolê não pode ser removido');
+    }
     const inExpense = this._expenses.some(
       (e) => e.payerId.equals(memberId) || e.participants.some((p) => p.memberId.equals(memberId)),
     );

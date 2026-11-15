@@ -1,4 +1,4 @@
-// Tipos do contrato HTTP da API (specs 001–003). Valores monetários sempre em centavos.
+// Tipos do contrato HTTP da API (specs 001–004). Valores monetários sempre em centavos.
 
 /** Participante do rolê. Desde a spec 003, `id` é o id da pessoa (`personId`). */
 export interface Member {
@@ -34,6 +34,8 @@ export interface GroupDetail {
   id: string;
   name: string;
   createdAt: string;
+  /** Usuário dono do rolê (spec 004). `null` em rolês anteriores à autenticação. */
+  ownerId: string | null;
   totalCents: number;
   members: Member[];
   expenses: Expense[];
@@ -95,6 +97,8 @@ export interface Person {
   name: string;
   pixKey: string | null;
   createdAt: string;
+  /** A pessoa está vinculada a um usuário: entra em rolês só por convite (spec 004, R7). */
+  hasAccount: boolean;
 }
 
 export interface PersonSummary extends Person {
@@ -143,6 +147,72 @@ export interface Dashboard {
   topPayers: { personId: string; name: string; paidCents: number }[];
   /** 6 meses (YYYY-MM), do mais antigo ao mais recente. */
   byMonth: { month: string; totalCents: number }[];
+}
+
+// ── Autenticação, usuários e convites (spec 004) ──
+
+export type UserRole = 'USER' | 'ADMIN';
+
+export interface User {
+  id: string;
+  username: string;
+  name: string;
+  role: UserRole;
+  personId: string;
+  createdAt: string;
+  /** Conta de demonstração (Adendo A, DM1). `GET /users` sempre traz; outras rotas podem omitir. */
+  isDemo?: boolean;
+}
+
+/** `GET /auth/me`. */
+export interface Me extends User {
+  pendingInviteCount: number;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  user: User;
+}
+
+export interface UserSearchResult {
+  id: string;
+  username: string;
+  name: string;
+}
+
+export interface CreateUserInput {
+  username: string;
+  password: string;
+  name?: string;
+  role?: UserRole;
+}
+
+/** `POST /admin/demo/purge` (Adendo A, DM3): quantos registros foram apagados. */
+export interface PurgeDemoResult {
+  groups: number;
+  invites: number;
+  people: number;
+}
+
+export type PurgeDemoActionResult = { ok: true; result: PurgeDemoResult } | { ok: false; error: string };
+
+export type InviteStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
+/** Convite enviado num rolê (`GET/POST /groups/:id/invites`). */
+export interface Invite {
+  id: string;
+  groupId: string;
+  invitee: UserSearchResult;
+  status: InviteStatus;
+  createdAt: string;
+}
+
+/** Convite pendente recebido pelo usuário logado (`GET /invites`). */
+export interface ReceivedInvite {
+  id: string;
+  group: { id: string; name: string };
+  inviter: UserSearchResult;
+  createdAt: string;
 }
 
 export interface ApiErrorBody {

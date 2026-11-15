@@ -1,4 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
+import type { Actor } from '../../../shared/domain/actor';
+import { CurrentUser } from '../../../shared/presentation/auth.decorators';
 import { CreatePersonUseCase } from '../application/use-cases/create-person.use-case';
 import { DeletePersonUseCase } from '../application/use-cases/delete-person.use-case';
 import { GetPersonUseCase } from '../application/use-cases/get-person.use-case';
@@ -18,23 +20,23 @@ export class PeopleController {
   ) {}
 
   @Post()
-  create(@Body() dto: CreatePersonDto) {
-    return this.createPerson.execute({ name: dto.name, pixKey: dto.pixKey });
+  create(@Body() dto: CreatePersonDto, @CurrentUser() actor: Actor) {
+    return this.createPerson.execute({ name: dto.name, pixKey: dto.pixKey, actor });
   }
 
   @Get()
-  list() {
-    return this.listPeople.execute({});
+  list(@CurrentUser() actor: Actor) {
+    return this.listPeople.execute({ actor });
   }
 
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.getPerson.execute({ personId: id });
+  get(@Param('id') id: string, @CurrentUser() actor: Actor) {
+    return this.getPerson.execute({ personId: id, actor });
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
-    return this.updatePerson.execute({ personId: id, name: dto.name, pixKey: dto.pixKey });
+  update(@Param('id') id: string, @Body() dto: UpdatePersonDto, @CurrentUser() actor: Actor) {
+    return this.updatePerson.execute({ personId: id, name: dto.name, pixKey: dto.pixKey, actor });
   }
 
   @Delete(':id')

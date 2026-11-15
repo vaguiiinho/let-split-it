@@ -41,6 +41,8 @@ services:
     environment:
       NODE_ENV: ${APP_NODE_ENV:-production}
       PORT: 3001
+      # Limpeza periódica dos dados de demonstração, em horas (0 desliga; spec 004, Adendo A).
+      DEMO_PURGE_INTERVAL_HOURS: ${DEMO_PURGE_INTERVAL_HOURS:-24}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
@@ -65,6 +67,8 @@ services:
       NODE_ENV: production
       API_URL: http://split-api:3001
       DEMO_ACCOUNT_HINT: ${DEMO_ACCOUNT_HINT:-off}
+      # Cookie de sessão só por HTTPS. `false` apenas como paliativo se o nginx não terminar TLS (spec 004).
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 30s

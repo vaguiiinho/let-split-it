@@ -7,6 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id              String        @id
+  username        String        @unique
+  passwordHash    String
+  role            UserRole      @default(USER)
+  personId        String        @unique
+  isDemo          Boolean       @default(false)
+  createdAt       DateTime
+  createdPeople   Person[]      @relation("PersonCreatedBy")
+  person          Person        @relation("PersonUser", fields: [personId], references: [id], onDelete: Restrict)
+  ownedGroups     Group[]
+  invitesSent     GroupInvite[] @relation("InviteInviter")
+  invitesReceived GroupInvite[] @relation("InviteInvitee")
+}
+
+model GroupInvite {
+  id          String       @id
+  groupId     String
+  inviterId   String
+  inviteeId   String
+  status      InviteStatus @default(PENDING)
+  createdAt   DateTime
+  respondedAt DateTime?
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviter     User         @relation("InviteInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee     User         @relation("InviteInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@index([inviteeId, status])
+  @@index([groupId, status])
+}
+
 model Person {
   id               String               @id
   name             String
@@ -18,15 +60,25 @@ model Person {
   shares           ExpenseParticipant[]
   paymentsSent     Payment[]            @relation("PaymentFrom")
   paymentsReceived Payment[]            @relation("PaymentTo")
+  user             User?                @relation("PersonUser")
+  createdById      String?
+  createdBy        User?                @relation("PersonCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([createdById])
 }
 
 model Group {
   id        String        @id
   name      String
   createdAt DateTime
+  ownerId   String?
+  owner     User?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   members   GroupMember[]
   expenses  Expense[]
   payments  Payment[]
+  invites   GroupInvite[]
+
+  @@index([ownerId])
 }
 
 model GroupMember {

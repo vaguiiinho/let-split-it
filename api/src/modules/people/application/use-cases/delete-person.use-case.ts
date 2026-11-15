@@ -11,6 +11,9 @@ export class DeletePersonUseCase {
   async execute(input: DeletePersonInput): Promise<DeletePersonOutput> {
     const id = UniqueEntityId.create(input.personId);
     if (!(await this.repo.findById(id))) throw new NotFoundError('Pessoa não encontrada');
+    if (await this.repo.isLinkedToUser(id)) {
+      throw new ConflictError('Não é possível excluir uma pessoa vinculada a um usuário');
+    }
     if ((await this.repo.countMemberships(id)) > 0) {
       throw new ConflictError('Não é possível excluir uma pessoa que participa de algum rolê');
     }

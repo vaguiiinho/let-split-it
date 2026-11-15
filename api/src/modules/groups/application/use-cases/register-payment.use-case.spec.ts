@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { FakeClock, makeRepo, seedGroup } from '../../testing/fixtures';
+import { FakeClock, makeRepo, seedGroup, ADMIN } from '../../testing/fixtures';
 import { RegisterPaymentUseCase } from './register-payment.use-case';
 
 describe('RegisterPaymentUseCase', () => {
@@ -12,8 +12,8 @@ describe('RegisterPaymentUseCase', () => {
   it('registra pagamento parcial; mais recente primeiro', async () => {
     const { s, uc } = await setup();
     const input = { groupId: s.gid, fromId: s.cadu.id.value, toId: s.ana.id.value };
-    await uc.execute({ ...input, amountCents: 1500 });
-    const out = await uc.execute({ ...input, amountCents: 500 });
+    await uc.execute({ actor: ADMIN, ...input, amountCents: 1500 });
+    const out = await uc.execute({ actor: ADMIN, ...input, amountCents: 500 });
     expect(out.payments.map((p) => p.amountCents)).toEqual([500, 1500]);
     expect(out.payments[0]).toMatchObject({ fromId: s.cadu.id.value, toId: s.ana.id.value });
   });
@@ -21,7 +21,7 @@ describe('RegisterPaymentUseCase', () => {
   it('409 acima do devido', async () => {
     const { s, uc } = await setup();
     await expect(
-      uc.execute({ groupId: s.gid, fromId: s.cadu.id.value, toId: s.ana.id.value, amountCents: 4001 }),
+      uc.execute({ actor: ADMIN, groupId: s.gid, fromId: s.cadu.id.value, toId: s.ana.id.value, amountCents: 4001 }),
     ).rejects.toMatchObject({ kind: 'conflict', message: 'Valor acima do devido: o máximo para este pagamento é R$ 40,00' });
   });
 
@@ -37,14 +37,14 @@ describe('RegisterPaymentUseCase', () => {
       { amountCents: 0 },
       { amountCents: 10.5 },
     ]) {
-      await expect(uc.execute({ ...base, ...b })).rejects.toMatchObject({ kind: 'validation' });
+      await expect(uc.execute({ actor: ADMIN, ...base, ...b })).rejects.toMatchObject({ kind: 'validation' });
     }
   });
 
   it('404 rolê inexistente', async () => {
     const { s, uc } = await setup();
     await expect(
-      uc.execute({ groupId: randomUUID(), fromId: s.cadu.id.value, toId: s.ana.id.value, amountCents: 1 }),
+      uc.execute({ actor: ADMIN, groupId: randomUUID(), fromId: s.cadu.id.value, toId: s.ana.id.value, amountCents: 1 }),
     ).rejects.toMatchObject({ kind: 'not_found' });
   });
 });

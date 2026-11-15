@@ -1,9 +1,10 @@
+import type { Actor } from '../../../../shared/domain/actor';
 import { UniqueEntityId } from '../../../../shared/domain/value-objects/unique-entity-id.vo';
 import { GroupRepository } from '../../domain/group.repository';
 import { GroupDetailOutput, toGroupDetailOutput } from '../dto/group-detail.output';
-import { findGroupOrFail } from '../find-group-or-fail';
+import { findAccessibleGroupOrFail } from '../group-access.policy';
 
-export type RemovePaymentInput = { groupId: string; paymentId: string };
+export type RemovePaymentInput = { actor: Actor; groupId: string; paymentId: string };
 export type RemovePaymentOutput = GroupDetailOutput;
 
 export class RemovePaymentUseCase {
@@ -12,7 +13,7 @@ export class RemovePaymentUseCase {
   async execute(input: RemovePaymentInput): Promise<RemovePaymentOutput> {
     const groupId = UniqueEntityId.create(input.groupId);
     const paymentId = UniqueEntityId.create(input.paymentId);
-    const group = await findGroupOrFail(this.repo, groupId);
+    const group = await findAccessibleGroupOrFail(this.repo, groupId, input.actor);
     group.removePayment(paymentId);
     await this.repo.save(group);
     return toGroupDetailOutput(group);
