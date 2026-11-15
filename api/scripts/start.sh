@@ -1,5 +1,5 @@
 #!/bin/sh
-# Entrypoint da imagem de produção: aplica as migrations e sobe a API.
+# Entrypoint da imagem de produção: aplica as migrations, roda o seed (se houver) e sobe a API.
 #
 # Baseline automático: bancos criados via `prisma db push` já têm as tabelas, mas não têm a primeira migration
 # registrada como aplicada. O `migrate deploy` então falha de um destes jeitos:
@@ -24,6 +24,13 @@ else
   else
     exit 1
   fi
+fi
+
+# Seed: roda a cada subida se existir src/seed.ts (compilado em dist/seed.js) — então ele PRECISA ser idempotente
+# (upsert / "cria se não existir"). Desligue com RUN_SEED=false no .env. Falha no seed derruba o container.
+if [ "${RUN_SEED:-true}" != "false" ] && [ -f dist/seed.js ]; then
+  echo "Rodando seed (dist/seed.js)"
+  node dist/seed.js
 fi
 
 exec node dist/main.js
