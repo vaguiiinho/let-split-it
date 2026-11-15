@@ -60,7 +60,6 @@ jobs:
     if: vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     env:
-      VERSION: ${{ needs.build-and-push.outputs.version }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_USER: ${{ secrets.VPS_USER }}
       VPS_PORT: ${{ vars.VPS_PORT || '22' }}
